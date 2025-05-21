@@ -1,4 +1,0 @@
-mountpoints:
-  /:
-    url: https://content.da.live/adobe-rnd/aem-gtm-martech/
-    type: markup
