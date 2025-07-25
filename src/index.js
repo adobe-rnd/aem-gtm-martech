@@ -44,7 +44,7 @@ const DEFAULT_CONFIG = Object.freeze({
     delayed: [],
   },
   pageMetadata: {},
-  consent: false,
+  consent: true,
   consentCallback: () => undefined,
   decorateCallback: () => undefined,
 });
