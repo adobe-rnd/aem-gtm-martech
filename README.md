@@ -35,3 +35,13 @@ If you use some ELint at the project level (or equivalent), make sure to update 
 ```
 *.min.js
 ```
+
+## Project instrumentation
+
+To properly connect and configure the plugin for your project, you'll need to edit both the `head.html` and `scripts.js` in your AEM project and add the following:
+
+1. Add preload hints for the dependencies we need to speed up the page load at the end of your `head.html`:
+    ```html
+    <link rel="preload" as="script" crossorigin="anonymous" href="/plugins/martech-gtm/src/index.js"/>
+    <link rel="preconnect" href="https://www.googletagmanager.com"/>
+    ```

@@ -15,5 +15,6 @@ module.exports = {
     'linebreak-style': ['error', 'unix'], // enforce unix linebreaks
     'no-param-reassign': [2, { props: false }], // allow modifying properties of param
     'import/no-cycle': 0, // Allow modules to use each other
+    'max-len': ['error', { code: 140 }], // allow long lines
   },
 };
