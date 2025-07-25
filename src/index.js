@@ -25,10 +25,10 @@
  * @property {Array<String>} containers.delayed The GTM containers to load during the delayed phase (defaults to empty list)
  * @property {Object} pageMetadata The page metadata to push to the data layer during the eager phase
  * @property {Boolean} consent Whether consent is required, if true all tracking is defaulted to 'denied'
- * @property {Function} consentCallback A function that will prompt the visitor for consent.
+ * @property {Function<Promise<Object>>|undefined} consentCallback A function that will prompt the visitor for consent.
  *                                    If the CMP does not automaically update the Google Consent config object,
  *                                    this function should return a new consent config object.
- * @property {Function} decorateCallback A function that will be called on each section & block load, to allow for decoration
+ * @property {Function<void>} decorateCallback A function that will be called on each section & block load, to allow for decoration
  *                                    of DataLayer events. The function will be passed all section or block elements found.
  */
 
@@ -240,8 +240,9 @@ class GtmMartech {
   async lazy() {
     // Update consent, if specified
     if (gtm.config.consent) {
-      const updatedConsent = await gtm.config.consentCallback();
-      if (updatedConsent) window.gtag('consent', 'update', updatedConsent);
+      gtm.config.consentCallback().then((updatedConsent) => {
+        if (updatedConsent) window.gtag('consent', 'update', updatedConsent);
+      }); 
     }
     // Load the lazy GTM containers
     loadGTM('lazy');
