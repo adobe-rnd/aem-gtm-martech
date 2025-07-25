@@ -246,7 +246,9 @@ class GtmMartech {
     }
     // Load the lazy GTM containers
     loadGTM('lazy');
-    observeElements(gtm.config.decorateCallback);
+    if (gtm.config.decorateCallback) {
+      observeElements(gtm.config.decorateCallback);
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this
