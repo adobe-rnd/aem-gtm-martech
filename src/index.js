@@ -80,7 +80,7 @@ function pushToDataLayer(payload) {
  * @returns {Array} The data layer instance
  */
 function initDataLayer(instanceName) {
-  window.gtag = () => {
+  window.gtag = function() {
     // eslint-disable-next-line no-console
     console.assert(gtm.config.dataLayer, 'Data layer is disabled in the martech config');
     // eslint-disable-next-line prefer-rest-params
