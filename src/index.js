@@ -34,6 +34,17 @@
 
 let gtm; // instance of GtmMartech for backref
 
+const DEFAULT_CONSENT = Object.freeze({
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: 'denied',
+  functionality_storage: 'denied',
+  personalization_storage: 'denied',
+  security_storage: 'denied',
+  wait_for_update: 500,
+});
+
 const DEFAULT_CONFIG = Object.freeze({
   analytics: true,
   dataLayer: true,
@@ -46,18 +57,7 @@ const DEFAULT_CONFIG = Object.freeze({
   pageMetadata: {},
   consent: true,
   consentCallback: () => undefined,
-  decorateCallback: () => undefined,
-});
-
-const DEFAULT_CONSENT = Object.freeze({
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  analytics_storage: 'denied',
-  functionality_storage: 'denied',
-  personalization_storage: 'denied',
-  security_storage: 'denied',
-  wait_for_update: 500,
+  decorateCallback: undefined,
 });
 
 /**
@@ -80,7 +80,8 @@ function pushToDataLayer(payload) {
  * @returns {Array} The data layer instance
  */
 function initDataLayer(instanceName) {
-  window.gtag = function() {
+  // eslint-disable-next-line func-names
+  window.gtag = function () {
     // eslint-disable-next-line no-console
     console.assert(gtm.config.dataLayer, 'Data layer is disabled in the martech config');
     // eslint-disable-next-line prefer-rest-params
@@ -242,7 +243,7 @@ class GtmMartech {
     if (gtm.config.consent) {
       gtm.config.consentCallback().then((updatedConsent) => {
         if (updatedConsent) window.gtag('consent', 'update', updatedConsent);
-      }); 
+      });
     }
     // Load the lazy GTM containers
     loadGTM('lazy');
