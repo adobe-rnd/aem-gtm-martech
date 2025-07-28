@@ -49,9 +49,9 @@ fatal: can't squash-merge: 'plugins/martech' was never added
 ```
 you can just delete the folder and re-add the plugin via the `git subtree add` command above.
 
-If you use some ELint at the project level (or equivalent), make sure to update ignore minified files in your `.eslintignore`:
+If you use some ELint at the project level (or equivalent), make sure to update ignore plugin files in your `.eslintignore`:
 ```
-*.min.js
+plugins/gtm-martech/*
 ```
 
 ## Project instrumentation
@@ -60,7 +60,7 @@ To properly connect and configure the plugin for your project, you'll need to ed
 
 1. Add preload hints for the dependencies we need to speed up the page load at the end of your `head.html`:
     ```html
-    <link rel="preload" as="script" crossorigin="anonymous" href="/plugins/martech-gtm/src/index.js"/>
+    <link rel="preload" as="script" crossorigin="anonymous" href="/plugins/gtm-martech/src/index.js"/>
     <link rel="preconnect" href="https://www.googletagmanager.com"/>
     ```
 
@@ -72,7 +72,7 @@ To properly connect and configure the plugin for your project, you'll need to ed
 3. Initialize the plugin, this should be done near the top of your `scripts.js` file, so that the appropriate methods can be called in their respective lifecycle phase.
 
     ```js
-    const { eager, lazy, delayed } = new GtmMartech({}
+    const { eager, lazy, delayed } = new GtmMartech({
       
       anaytics: /* enable/disable GA4 (default: enabled) */,
       dataLayer: /* enable/disable the DataLayer initialization (default: enabled) */,
@@ -166,4 +166,11 @@ To properly connect and configure the plugin for your project, you'll need to ed
       }
     }
     ```
+
+
+## FAQ
+
+### The earlies GTM Containers are loaded Lazy. I need the page view data immediately.
+
+While the GTM containers are loaded lazy, the GA4 library is loaded in the eager phase. This loading will send a collection event for a page view. Any custom data passed via the `pageMetadata` configuration property will be passed along with the page view event.
 
