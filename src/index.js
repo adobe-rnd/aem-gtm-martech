@@ -131,7 +131,7 @@ function loadGTM(phase) {
 }
 
 /**
- * Observe Section & Block elements projects to decorate for DataLayer events.
+ * Observe for Section & Block elements so projects can decorate with DataLayer events.
  *
  * @param {Function} fn the function to call for each found section or block
  */
@@ -207,14 +207,14 @@ class GtmMartech {
     if (typeof martechConfig.tags === 'string') {
       martechConfig.tags = [martechConfig.tags];
     }
-    // eslint-disable-next-line no-console
-    console.assert(martechConfig.tags.length > 0, 'No GA4 tag provided.');
-
     if (typeof martechConfig.containers === 'string') {
       martechConfig.containers = { lazy: [martechConfig.containers], delayed: [] };
     } else if (Array.isArray(martechConfig.containers)) {
       martechConfig.containers = { lazy: martechConfig.containers, delayed: [] };
     }
+
+    // eslint-disable-next-line no-console
+    console.assert(martechConfig.tags.length > 0, 'No GA4 tag provided.');
 
     this.config = { ...DEFAULT_CONFIG, ...martechConfig };
     this.dataLayer = initDataLayer(this.config.dataLayerInstanceName);
