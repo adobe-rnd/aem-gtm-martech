@@ -168,6 +168,11 @@ To properly connect and configure the plugin for your project, you'll need to ed
     ```
 
 
+## Example Site
+
+An example of this plugin in use can be found on the [AEM GTM Martech demo site](https://main--aem-gtm-martech-site--adobe-rnd.aem.page/).
+
+
 ## FAQ
 
 ### The earlies GTM Containers are loaded Lazy. I need the page view data immediately.
