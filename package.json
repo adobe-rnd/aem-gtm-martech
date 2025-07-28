@@ -1,5 +1,5 @@
 {
-  "name": "@adobe/aem-gtmmartech",
+  "name": "@adobe/aem-gtm-martech",
   "version": "0.0.1",
   "main": "src/index.js",
   "scripts": {
