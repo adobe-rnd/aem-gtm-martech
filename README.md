@@ -270,4 +270,4 @@ An example of this plugin in use can be found on the [AEM GTM Martech demo site]
 
 ### I need the page view data immediately, when is it captured?
 
-All GA4 scripts are imported to the page during the Eager Phase. During this process a page view event is dispatched, along with any custom metadata provided to during plugin initialzation. Even if the GTM containers are loaded lazily, this data will be captured as soon as Google's library is conifgured to dispatch it.
+All GA4 scripts are imported to the page during the Eager Phase. During this process a `page_view` event occurs, which includes any custom metadata provided to during plugin initialization. This `page_view` event will be dispatched as soon as the Google library decides it should be sent, regardless of when any other phase's GTM libraries are loaded.
