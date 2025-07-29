@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-
 /**
  * @callback consentCallback
  * @returns {Promise<Object>|undefined} A promise that resolves to a consent config object.
@@ -45,7 +44,7 @@
 
 let gtm; // instance of GtmMartech for backref
 
-const GTM_HOST = 'https://www.googletagmanager.com'
+const GTM_HOST = 'https://www.googletagmanager.com';
 
 const DEFAULT_CONSENT = Object.freeze({
   ad_storage: 'denied',
