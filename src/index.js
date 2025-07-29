@@ -12,7 +12,7 @@
 
 /**
  * Default configuration for the plugin.
- * @typedef {Object} GTMMartechConfig
+ * @typedef {Object} GtmMartechConfig
  * @property {Boolean} analytics Whether to initialize analytics
  * @property {Boolean} dataLayer Whether to initialize the data layer
  * @property {String} dataLayerInstanceName The name of the data ayer instance in the global scope
@@ -26,13 +26,15 @@
  * @property {Object} pageMetadata The page metadata to push to the data layer during the eager phase
  * @property {Boolean} consent Whether consent is required, if true all tracking is defaulted to 'denied'
  * @property {Function<Promise<Object>>|undefined} consentCallback A function that will prompt the visitor for consent.
- *                                    If the CMP does not automaically update the Google Consent config object,
+ *                                    If the CMP does not automatically update the Google Consent config object,
  *                                    this function should return a new consent config object.
  * @property {Function<void>} decorateCallback A function that will be called on each section & block load, to allow for decoration
  *                                    of DataLayer events. The function will be passed all section or block elements found.
  */
 
 let gtm; // instance of GtmMartech for backref
+
+const GTM_HOST = 'https://www.googletagmanager.com'
 
 const DEFAULT_CONSENT = Object.freeze({
   ad_storage: 'denied',
@@ -61,6 +63,31 @@ const DEFAULT_CONFIG = Object.freeze({
 });
 
 /**
+ * Loads a non module JS file.
+ * @param {string} src URL to the JS file
+ * @param {Object} attrs additional optional attributes
+ */
+async function loadScript(src, attrs) {
+  return new Promise((resolve, reject) => {
+    if (!document.querySelector(`head > script[src="${src}"]`)) {
+      const script = document.createElement('script');
+      script.src = src;
+      if (attrs) {
+        // eslint-disable-next-line no-restricted-syntax, guard-for-in
+        for (const attr in attrs) {
+          script.setAttribute(attr, attrs[attr]);
+        }
+      }
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.append(script);
+    } else {
+      resolve();
+    }
+  });
+}
+
+/**
  * Push a payload to the data layer
  *
  * @param {Object} payload The payload to push to the data layer
@@ -71,6 +98,15 @@ function pushToDataLayer(payload) {
   // eslint-disable-next-line no-console
   console.assert(gtm.config.dataLayer, 'Data layer is disabled in the martech config');
   gtm.dataLayer.push(payload);
+}
+
+/**
+ * Update the consent config
+ *
+ * @param {Object} consentConfig The consent config to update
+ */
+function updateConsent(consentConfig) {
+  if (consentConfig) window.gtag('consent', 'update', consentConfig);
 }
 
 /**
@@ -100,14 +136,12 @@ function initDataLayer(instanceName) {
  * @param {String} instanceName the name of the data layer instance in the global scope
  * @param {Array<String>} tags the GA4 tags to initialize
  */
-function initGa4(instanceName, tags) {
+function initGa(instanceName, tags) {
   // eslint-disable-next-line no-console
   console.assert(gtm.config.analytics, 'Analytics is disabled in the martech config');
+  const attrs = { async: true };
   tags.forEach((tag) => {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${tag}&l=${instanceName}`;
-    document.head.appendChild(script);
+    loadScript(`${GTM_HOST}/gtag/js?id=${tag}&l=${instanceName}`, attrs);
   });
 }
 
@@ -116,17 +150,15 @@ function initGa4(instanceName, tags) {
  *
  * @param {String} phase the phase to load
  */
-function loadGTM(phase) {
+function loadGtm(phase) {
   // eslint-disable-next-line no-console
   console.assert(gtm.config.analytics, 'Analytics is disabled in the martech config');
   if (gtm.config.containers[phase]?.length > 0) {
     pushToDataLayer({ event: 'gtm.js', [`gtm.${phase}.start`]: new Date().getTime() });
+    const attrs = { async: true };
 
     gtm.config.containers[phase].forEach((container) => {
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = `https://www.googletagmanager.com/gtm.js?id=${container}&l=${gtm.config.dataLayerInstanceName}`;
-      document.head.appendChild(script);
+      loadScript(`${GTM_HOST}/gtm.js?id=${container}&l=${gtm.config.dataLayerInstanceName}`, attrs);
     });
   }
 }
@@ -199,7 +231,7 @@ function observeElements(fn) {
 class GtmMartech {
   /**
    * Create a new GtmMartech instance.
-   * @param {GTMMartechConfig} martechConfig
+   * @param {GtmMartechConfig} martechConfig
    */
   constructor(martechConfig) {
     gtm = this;
@@ -234,19 +266,17 @@ class GtmMartech {
   // eslint-disable-next-line class-methods-use-this
   async eager() {
     // Load the GA4 tag(s)
-    initGa4(gtm.config.dataLayerInstanceName, gtm.config.tags);
+    initGa(gtm.config.dataLayerInstanceName, gtm.config.tags);
   }
 
   // eslint-disable-next-line class-methods-use-this
   async lazy() {
     // Update consent, if specified
     if (gtm.config.consent) {
-      gtm.config.consentCallback().then((updatedConsent) => {
-        if (updatedConsent) window.gtag('consent', 'update', updatedConsent);
-      });
+      gtm.config.consentCallback().then(updateConsent);
     }
     // Load the lazy GTM containers
-    loadGTM('lazy');
+    loadGtm('lazy');
     if (gtm.config.decorateCallback) {
       observeElements(gtm.config.decorateCallback);
     }
@@ -255,8 +285,8 @@ class GtmMartech {
   // eslint-disable-next-line class-methods-use-this
   async delayed() {
     // Load the delayed GTM containers
-    loadGTM('delayed');
+    loadGtm('delayed');
   }
 }
 
-export { GtmMartech, pushToDataLayer };
+export { GtmMartech, pushToDataLayer, updateConsent };
