@@ -1,6 +1,6 @@
 :construction: This is an early access technology and is still heavily in development. Reach out to us over Slack before using it.
 
-# AEM Edget Delivery Services Marketing Technology - GA/GTM
+# AEM Edge Delivery Services Marketing Technology - GA/GTM
 
 he AEM Marketing Technology plugin helps you quickly set up a MarTech stack based on Google Analytics (GA) & Google Tag Manager (GTM) for your AEM project. It is currently available to customers in collaboration with AEM Engineering via co-innovation VIP Projects. To implement your use cases, please reach out to the AEM Engineering team in the Slack channel dedicated to your project.
 
