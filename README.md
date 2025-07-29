@@ -155,7 +155,7 @@ async function loadEager(doc) {
 }
 ```
 
-Note that the `eager()` call is asynchronous, therefore can be added before or after the LCP section. We do recommend awaiting it, as future updaets (such as personalization support) may require it.
+Note that the `eager()` call is asynchronous, therefore can be added before or after the LCP section. We do recommend awaiting it, as future updates (such as personalization support) may require it.
 
 
 4. Call the Lazy Phase Function
