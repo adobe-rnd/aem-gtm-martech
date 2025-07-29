@@ -145,9 +145,11 @@ async function loadEager(doc) {
   …
   if (main) {
     decorateMain(main);
-    await eager();
     doc.body.classList.add('appear');
-    await loadSection(main.querySelector('.section'), waitForFirstImage);
+    await Promise.all([
+      eager(),
+      loadSection(main.querySelector('.section'), waitForFirstImage),
+    ]);
   }
   …
 }
