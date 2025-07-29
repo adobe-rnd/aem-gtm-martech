@@ -75,9 +75,9 @@ const DEFAULT_CONFIG = Object.freeze({
 /**
  * Loads a non module JS file.
  * @param {string} src URL to the JS file
- * @param {Object} attrs additional optional attributes
  */
-async function loadScript(src, attrs) {
+async function loadScript(src) {
+  const attrs = { async: true };
   return new Promise((resolve, reject) => {
     if (!document.querySelector(`head > script[src="${src}"]`)) {
       const script = document.createElement('script');
@@ -149,9 +149,8 @@ function initDataLayer(instanceName) {
 function initGa(instanceName, tags) {
   // eslint-disable-next-line no-console
   console.assert(gtm.config.analytics, 'Analytics is disabled in the martech config');
-  const attrs = { async: true };
   tags.forEach((tag) => {
-    loadScript(`${GTM_HOST}/gtag/js?id=${tag}&l=${instanceName}`, attrs);
+    loadScript(`${GTM_HOST}/gtag/js?id=${tag}&l=${instanceName}`);
   });
 }
 
@@ -165,10 +164,8 @@ function loadGtm(phase) {
   console.assert(gtm.config.analytics, 'Analytics is disabled in the martech config');
   if (gtm.config.containers[phase]?.length > 0) {
     pushToDataLayer({ event: 'gtm.js', [`gtm.${phase}.start`]: new Date().getTime() });
-    const attrs = { async: true };
-
     gtm.config.containers[phase].forEach((container) => {
-      loadScript(`${GTM_HOST}/gtm.js?id=${container}&l=${gtm.config.dataLayerInstanceName}`, attrs);
+      loadScript(`${GTM_HOST}/gtm.js?id=${container}&l=${gtm.config.dataLayerInstanceName}`);
     });
   }
 }
