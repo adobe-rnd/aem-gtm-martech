@@ -10,6 +10,17 @@
  * governing permissions and limitations under the License.
  */
 
+
+/**
+ * @callback consentCallback
+ * @returns {Promise<Object>|undefined} A promise that resolves to a consent config object.
+ */
+
+/**
+ * @callback decorateCallback
+ * @param {Element} el The section or block element to decorate.
+ */
+
 /**
  * Default configuration for the plugin.
  * @typedef {Object} GtmMartechConfig
@@ -25,10 +36,10 @@
  * @property {Array<String>} containers.delayed The GTM containers to load during the delayed phase (defaults to empty list)
  * @property {Object} pageMetadata The page metadata to push to the data layer during the eager phase
  * @property {Boolean} consent Whether consent is required, if true all tracking is defaulted to 'denied'
- * @property {Function<Promise<Object>>|undefined} consentCallback A function that will prompt the visitor for consent.
+ * @property {consentCallback} consentCallback A function that will prompt the visitor for consent.
  *                                    If the CMP does not automatically update the Google Consent config object,
  *                                    this function should return a new consent config object.
- * @property {Function<void>} decorateCallback A function that will be called on each section & block load, to allow for decoration
+ * @property {decorateCallback} decorateCallback A function that will be called on each section & block load, to allow for decoration
  *                                    of DataLayer events. The function will be passed all section or block elements found.
  */
 
@@ -105,8 +116,8 @@ function pushToDataLayer(payload) {
  *
  * @param {Object} consentConfig The consent config to update
  */
-function updateConsent(consentConfig) {
-  if (consentConfig) window.gtag('consent', 'update', consentConfig);
+function updateUserConsent(consentConfig) {
+  window.gtag('consent', 'update', consentConfig);
 }
 
 /**
@@ -273,7 +284,7 @@ class GtmMartech {
   async lazy() {
     // Update consent, if specified
     if (gtm.config.consent) {
-      gtm.config.consentCallback().then(updateConsent);
+      gtm.config.consentCallback().then(updateUserConsent);
     }
     // Load the lazy GTM containers
     loadGtm('lazy');
@@ -289,4 +300,4 @@ class GtmMartech {
   }
 }
 
-export { GtmMartech, pushToDataLayer, updateConsent };
+export { GtmMartech, pushToDataLayer, updateUserConsent };
