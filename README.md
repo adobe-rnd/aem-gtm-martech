@@ -158,7 +158,7 @@ async function loadEager(doc) {
 Note that the `eager()` call is asynchronous, therefore can be added before or after the LCP section. We do recommend awaiting it, as future updates (such as personalization support) may require it.
 
 
-4. Call the Lazy Phase Function
+### 5. Call the Lazy Phase Function
 
 Update the `loadLazy` function, to call plugin's lazy phase.
 
@@ -172,7 +172,7 @@ async function loadLazy(doc) {
 ```
 Note that the `lazy()` function must be awaited _independently_ for correct handling of the `decorateCallback`. Do not perform other processing (e.g. section loading or dynamic block insertions) simultaneously using `Promise.all()`, otherwise correct decoration may not occur.
 
-### 5. Call the Delayed Phase Function
+### 6. Call the Delayed Phase Function
 
 Update the `loadDelayed` function to call the plugin's delayed phase, after a timeout. If there are no `delayed` GTM Containers, this step is not necessary.
 
@@ -185,7 +185,7 @@ function loadDelayed() {
 }
 ```
 
-### 6. Handle Consent
+### 7. Handle Consent
 
 If consent is enabled, implement a function to check consent. If the Consent Managment Provider (CMP) does not automatically update Google's consent store, resolve to a state based on user selections. The data structure must conform to the expected [Google consent types](https://developers.google.com/tag-platform/security/concepts/consent-mode#consent-types)
 
@@ -208,7 +208,7 @@ async function checkConsent() {
 }
 ```
 
-### 7. Decorate Section & Blocks
+### 8. Decorate Section & Blocks
 
 If desired, implement a `decorateCallback` to add event processing to Sections or Blocks. This function makes a best attempt at finding all Sections & Blocks that are loaded. Each will be passed to the specified function. If some elements are not processed, we recommend you manually monitor and decorate missed elements.
 
