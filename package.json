@@ -2,6 +2,7 @@
   "name": "@adobe/aem-gtm-martech",
   "version": "0.0.1",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "lint": "eslint src"
   },
@@ -27,9 +28,7 @@
   },
   "homepage": "https://github.com/adobe/aem-gtm-martech#readme",
   "devDependencies": {
-    "@babel/eslint-parser": "7.22.15",
-    "eslint": "8.48.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-plugin-import": "2.28.1"
+    "@adobe/eslint-config-helix": "^3.0.8",
+    "eslint": "^9.32.0"
   }
 }
