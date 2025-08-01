@@ -279,6 +279,10 @@ Updates the consent according to the []`gtag.js` implementation](https://develop
 
 ---
 
+### `window.gtag()`
+On initialization, this Plugin will define the `window.gtag` function according to the [GA Documentation](https://developers.google.com/tag-platform/gtagjs#add_the_google_tag_to_your_website).
+
+
 ## An Example Site
 
 An example of this plugin in use can be found on the [AEM GTM Martech demo site](https://main--aem-gtm-martech-site--adobe-rnd.aem.page/).

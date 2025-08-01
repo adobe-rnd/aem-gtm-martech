@@ -101,12 +101,7 @@ async function loadScript(src) {
  */
 function initDataLayer(instanceName) {
   window[instanceName] = window[instanceName] || [];
-  const ogtag = window.gtag;
   function gtag() {
-    if (ogtag) {
-      // eslint-disable-next-line prefer-rest-params, prefer-spread
-      ogtag.apply(null, arguments);
-    }
     // eslint-disable-next-line prefer-rest-params
     window[instanceName].push(arguments);
   }
@@ -301,6 +296,7 @@ class GtmMartech {
    *
    * @param {Object} consentConfig The consent config to update
    */
+  // eslint-disable-next-line class-methods-use-this
   updateUserConsent(consentConfig) {
     window.gtag('consent', 'update', consentConfig);
   }
