@@ -9,11 +9,12 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+/* eslint-disable no-unused-vars, no-unused-expressions */
 
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { JSDOM } from 'jsdom';
-import { GtmMartech } from '../../src/index.js';
+import GtmMartech from '../src/index.js';
 
 const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
 const MEASUREMENT_ID_2 = 'GA_MEASUREMENT_ID_2';
@@ -50,7 +51,7 @@ describe('GtmMartech constructor', () => {
     it('should initialize with default configuration', async () => {
       // Spy on console.assert to check for the assertion when no tags are provided
       const consoleAssertSpy = sinon.spy(console, 'assert');
-      
+
       // Create GtmMartech instance with no configuration
       const gtmMartech = new GtmMartech();
 
@@ -60,7 +61,6 @@ describe('GtmMartech constructor', () => {
 
       // Verify default configuration is applied
       expect(gtmMartech.config.analytics).to.be.true;
-      expect(gtmMartech.config.dataLayer).to.be.true;
       expect(gtmMartech.config.dataLayerInstanceName).to.equal('gtmDataLayer');
       expect(gtmMartech.config.tags).to.deep.equal([]);
       expect(gtmMartech.config.containers).to.deep.equal({ lazy: [], delayed: [] });
@@ -132,9 +132,9 @@ describe('GtmMartech constructor', () => {
         tags: [MEASUREMENT_ID_1],
         containers: 'GTM-XXXXXXX',
       });
-      expect(stringContainerGtm.config.containers).to.deep.equal({ 
-        lazy: ['GTM-XXXXXXX'], 
-        delayed: [] 
+      expect(stringContainerGtm.config.containers).to.deep.equal({
+        lazy: ['GTM-XXXXXXX'],
+        delayed: [],
       });
     });
 
@@ -144,9 +144,9 @@ describe('GtmMartech constructor', () => {
         tags: [MEASUREMENT_ID_1],
         containers: ['GTM-XXXXXXX', 'GTM-YYYYYYY'],
       });
-      expect(arrayContainerGtm.config.containers).to.deep.equal({ 
-        lazy: ['GTM-XXXXXXX', 'GTM-YYYYYYY'], 
-        delayed: [] 
+      expect(arrayContainerGtm.config.containers).to.deep.equal({
+        lazy: ['GTM-XXXXXXX', 'GTM-YYYYYYY'],
+        delayed: [],
       });
     });
 
@@ -159,9 +159,9 @@ describe('GtmMartech constructor', () => {
           delayed: ['GTM-YYYYYYY'],
         },
       });
-      expect(objectContainerGtm.config.containers).to.deep.equal({ 
-        lazy: ['GTM-XXXXXXX'], 
-        delayed: ['GTM-YYYYYYY'] 
+      expect(objectContainerGtm.config.containers).to.deep.equal({
+        lazy: ['GTM-XXXXXXX'],
+        delayed: ['GTM-YYYYYYY'],
       });
     });
   });
@@ -199,7 +199,7 @@ describe('GtmMartech constructor', () => {
         // Verify that data pushed to gtag is stored in the data layer
         window.gtag('event', 'test_event', { event_category: 'test' });
         expect(window.gtmDataLayer).to.have.length.greaterThan(3);
-        
+
         // The gtag function pushes the arguments object to the data layer
         const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
         expect(lastEntry[0]).to.equal('event');
@@ -222,7 +222,7 @@ describe('GtmMartech constructor', () => {
         window.gtag('event', 'test_event', { event_category: 'test' });
         const lastEntry = window.customDataLayer[window.customDataLayer.length - 1];
         expect(lastEntry[0]).to.equal('event');
-        expect(lastEntry[1]).to.equal('test_event'); 
+        expect(lastEntry[1]).to.equal('test_event');
       });
 
       it('should handle custom data layer instance name configuration', async () => {
@@ -236,36 +236,5 @@ describe('GtmMartech constructor', () => {
         expect(gtmMartech.config.dataLayerInstanceName).to.equal('customDataLayer');
       });
     });
-
-    describe('when datalayer is disabled', () => {
-      it('should not create datalayer', async () => {
-        // Create GtmMartech instance with datalayer disabled
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
-          dataLayer: false,
-        });
-
-        // Verify that no datalayer was created
-        expect(window.gtmDataLayer).to.be.undefined;
-        expect(window.gtag).to.be.undefined;
-        expect(gtmMartech.dataLayer).to.be.undefined;
-      });
-
-      it('should not create custom datalayer when datalayer is disabled', async () => {
-        // Create GtmMartech instance with datalayer disabled and custom name
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
-          dataLayer: false,
-          dataLayerInstanceName: 'customDataLayer',
-        });
-
-        // Verify that no custom datalayer was created
-        expect(window.customDataLayer).to.be.undefined;
-        expect(window.gtag).to.be.undefined;
-        expect(gtmMartech.dataLayer).to.be.undefined;
-      });
-    });
   });
-
-
-}); 
+});

@@ -93,7 +93,6 @@ async function loadScript(src) {
   });
 }
 
-
 /**
  * Initialize the data layer
  *
@@ -109,7 +108,6 @@ function initDataLayer(instanceName) {
   window.gtag = gtag;
   return window[instanceName]; // return it so plugin can reference directly
 }
-
 
 /**
  * Initialize GA4 tags.
@@ -246,7 +244,6 @@ class GtmMartech {
   /**
    * Operations to perform during the eager phase
    */
-  // eslint-disable-next-line class-methods-use-this
   async eager() {
     // Load the GA4 tag(s) if analytics is enabled
     if (this.config.analytics) {
@@ -260,11 +257,14 @@ class GtmMartech {
   /**
    * Operations to perform during the lazy phase
    */
-  // eslint-disable-next-line class-methods-use-this
   async lazy() {
     // Update consent, if specified
     if (this.config.consent) {
-      this.config.consentCallback().then(this.updateUserConsent.bind(this));
+      this.config.consentCallback().then((consentConfig) => {
+        if (consentConfig !== undefined) {
+          this.updateUserConsent(consentConfig);
+        }
+      });
     }
     this.pushToDataLayer({ event: 'gtm.js', 'gtm.start': Date.now() });
     // Load the lazy GTM containers
@@ -277,7 +277,6 @@ class GtmMartech {
   /**
    * Operations to perform during the delayed phase
    */
-  // eslint-disable-next-line class-methods-use-this
   async delayed() {
     // Load the delayed GTM containers
     loadGtm.bind(this)('delayed');

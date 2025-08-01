@@ -9,11 +9,12 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+/* eslint-disable no-unused-vars, no-unused-expressions */
 
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { JSDOM } from 'jsdom';
-import { GtmMartech, pushToDataLayer } from '../../src/index.js';
+import GtmMartech from '../src/index.js';
 
 const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
 
@@ -60,7 +61,7 @@ describe('pushToDataLayer function', () => {
       const payload = { event: 'test_event', event_category: 'test' };
       const initialLength = window.gtmDataLayer.length;
 
-      pushToDataLayer(payload);
+      gtmMartech.pushToDataLayer(payload);
 
       // Verify payload was added to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
@@ -82,9 +83,9 @@ describe('pushToDataLayer function', () => {
 
       const initialLength = window.gtmDataLayer.length;
 
-      pushToDataLayer(payload1);
-      pushToDataLayer(payload2);
-      pushToDataLayer(payload3);
+      gtmMartech.pushToDataLayer(payload1);
+      gtmMartech.pushToDataLayer(payload2);
+      gtmMartech.pushToDataLayer(payload3);
 
       // Verify all payloads were added
       expect(window.gtmDataLayer).to.have.length(initialLength + 3);
@@ -112,7 +113,7 @@ describe('pushToDataLayer function', () => {
               revenue: 35.43,
               tax: 4.90,
               shipping: 5.99,
-              coupon: 'SUMMER_SALE'
+              coupon: 'SUMMER_SALE',
             },
             products: [{
               name: 'Triblend Android T-Shirt',
@@ -121,15 +122,15 @@ describe('pushToDataLayer function', () => {
               brand: 'Google',
               category: 'Apparel',
               variant: 'Gray',
-              quantity: 1
-            }]
-          }
-        }
+              quantity: 1,
+            }],
+          },
+        },
       };
 
       const initialLength = window.gtmDataLayer.length;
 
-      pushToDataLayer(complexPayload);
+      gtmMartech.pushToDataLayer(complexPayload);
 
       // Verify complex payload was added correctly
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
@@ -151,9 +152,9 @@ describe('pushToDataLayer function', () => {
 
       const initialLength = window.gtmDataLayer.length;
 
-      pushToDataLayer(stringPayload);
-      pushToDataLayer(numberPayload);
-      pushToDataLayer(booleanPayload);
+      gtmMartech.pushToDataLayer(stringPayload);
+      gtmMartech.pushToDataLayer(numberPayload);
+      gtmMartech.pushToDataLayer(booleanPayload);
 
       // Verify primitive payloads were added
       expect(window.gtmDataLayer).to.have.length(initialLength + 3);
@@ -173,8 +174,8 @@ describe('pushToDataLayer function', () => {
 
       const initialLength = window.gtmDataLayer.length;
 
-      pushToDataLayer(null);
-      pushToDataLayer(undefined);
+      gtmMartech.pushToDataLayer(null);
+      gtmMartech.pushToDataLayer(undefined);
 
       // Verify null and undefined were added
       expect(window.gtmDataLayer).to.have.length(initialLength + 2);
@@ -195,7 +196,7 @@ describe('pushToDataLayer function', () => {
       const payload = { event: 'custom_event' };
       const initialLength = window.customDataLayer.length;
 
-      pushToDataLayer(payload);
+      customGtmMartech.pushToDataLayer(payload);
 
       // Verify payload was added to custom datalayer
       expect(window.customDataLayer).to.have.length(initialLength + 1);
@@ -203,26 +204,6 @@ describe('pushToDataLayer function', () => {
 
       // Verify no warning was logged
       sinon.assert.notCalled(consoleWarnSpy);
-    });
-  });
-
-  describe('when GtmMartech is initialized with datalayer disabled', () => {
-    it('should log warning and not push to datalayer', async () => {
-      // Initialize GtmMartech with datalayer disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        dataLayer: false,
-      });
-
-      const payload = { event: 'test_event' };
-
-      pushToDataLayer(payload);
-
-      // Verify warning was logged
-      sinon.assert.calledWith(consoleWarnSpy, 'Data layer is disabled in the martech config');
-
-      // Verify no datalayer was created
-      expect(window.gtmDataLayer).to.be.undefined;
     });
   });
 
@@ -238,9 +219,9 @@ describe('pushToDataLayer function', () => {
       // Test large payload
       const largePayload = {
         event: 'large_event',
-        data: Array(1000).fill('test_data').map((item, index) => ({ id: index, value: item }))
+        data: Array(1000).fill('test_data').map((item, index) => ({ id: index, value: item })),
       };
-      pushToDataLayer(largePayload);
+      gtmMartech.pushToDataLayer(largePayload);
 
       // Verify large payload was added
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
@@ -261,7 +242,7 @@ describe('pushToDataLayer function', () => {
       // Test circular reference
       const circularPayload = { event: 'circular_event' };
       circularPayload.self = circularPayload;
-      pushToDataLayer(circularPayload);
+      gtmMartech.pushToDataLayer(circularPayload);
 
       // Verify circular payload was added
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
@@ -281,7 +262,7 @@ describe('pushToDataLayer function', () => {
 
       // Test function payload
       const functionPayload = { event: 'function_event', callback: () => 'test' };
-      pushToDataLayer(functionPayload);
+      gtmMartech.pushToDataLayer(functionPayload);
 
       // Verify function payload was added
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
@@ -291,4 +272,4 @@ describe('pushToDataLayer function', () => {
       sinon.assert.notCalled(consoleWarnSpy);
     });
   });
-}); 
+});

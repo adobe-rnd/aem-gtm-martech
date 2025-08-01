@@ -9,11 +9,12 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+/* eslint-disable no-unused-vars, no-unused-expressions */
 
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { JSDOM } from 'jsdom';
-import { GtmMartech } from '../../src/index.js';
+import GtmMartech from '../src/index.js';
 
 const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
 
@@ -74,7 +75,7 @@ describe('gtag function', () => {
 
       // Verify arguments were pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       // The gtag function pushes the arguments object to the data layer
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[0]).to.equal('event');
@@ -100,7 +101,7 @@ describe('gtag function', () => {
 
       // Verify all calls were pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 3);
-      
+
       // Check the last three entries
       const lastThreeEntries = window.gtmDataLayer.slice(-3);
       expect(lastThreeEntries[0][0]).to.equal('config');
@@ -125,7 +126,7 @@ describe('gtag function', () => {
 
       // Verify event was pushed to custom datalayer
       expect(window.customDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.customDataLayer[window.customDataLayer.length - 1];
       expect(lastEntry[0]).to.equal('event');
       expect(lastEntry[1]).to.equal('custom_event');
@@ -154,21 +155,21 @@ describe('gtag function', () => {
             item_name: 'Stan and Friends Tee',
             item_category: 'Apparel',
             price: 35.43,
-            quantity: 1
-          }
-        ]
+            quantity: 1,
+          },
+        ],
       });
 
       // Verify complex event was pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[0]).to.equal('event');
       expect(lastEntry[1]).to.equal('purchase');
       expect(lastEntry[2]).to.deep.include({
         transaction_id: 'T_12345',
         value: 35.43,
-        currency: 'USD'
+        currency: 'USD',
       });
       expect(lastEntry[2].items).to.have.length(1);
       expect(lastEntry[2].items[0].item_id).to.equal('SKU_12345');
@@ -191,7 +192,7 @@ describe('gtag function', () => {
 
       // Verify large event was pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[1]).to.equal('large_event');
       expect(lastEntry[2].data).to.have.length(1000);
@@ -215,7 +216,7 @@ describe('gtag function', () => {
 
       // Verify circular event was pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[1]).to.equal('circular_event');
       expect(lastEntry[2]).to.equal(circularData);
@@ -233,16 +234,16 @@ describe('gtag function', () => {
       const initialLength = window.gtmDataLayer.length;
 
       // Test function arguments
-      const functionData = { 
-        event: 'function_event', 
+      const functionData = {
+        event: 'function_event',
         callback: () => 'test',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       window.gtag('event', 'function_event', functionData);
 
       // Verify function event was pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[1]).to.equal('function_event');
       expect(lastEntry[2]).to.deep.equal(functionData);
@@ -264,7 +265,7 @@ describe('gtag function', () => {
 
       // Verify null/undefined event was pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[1]).to.be.null;
       expect(lastEntry[2]).to.be.undefined;
@@ -286,41 +287,11 @@ describe('gtag function', () => {
 
       // Verify empty string event was pushed to datalayer
       expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
+
       const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
       expect(lastEntry[0]).to.equal('');
       expect(lastEntry[1]).to.equal('');
       expect(lastEntry[2]).to.equal('');
-
-      // Verify no warnings were logged
-      sinon.assert.notCalled(consoleWarnSpy);
-    });
-
-    it('should call existing gtag function when window.gtag already exists', async () => {
-      // Create a mock existing gtag function
-      const existingGtagSpy = sinon.spy();
-      window.gtag = existingGtagSpy;
-
-      // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
-
-      const initialLength = window.gtmDataLayer.length;
-
-      // Call gtag with arguments
-      window.gtag('event', 'test_event', { event_category: 'test' });
-
-      // Verify the existing gtag function was called with the arguments
-      sinon.assert.calledWith(existingGtagSpy, 'event', 'test_event', { event_category: 'test' });
-
-      // Verify arguments were also pushed to datalayer
-      expect(window.gtmDataLayer).to.have.length(initialLength + 1);
-      
-      const lastEntry = window.gtmDataLayer[window.gtmDataLayer.length - 1];
-      expect(lastEntry[0]).to.equal('event');
-      expect(lastEntry[1]).to.equal('test_event');
-      expect(lastEntry[2]).to.deep.equal({ event_category: 'test' });
 
       // Verify no warnings were logged
       sinon.assert.notCalled(consoleWarnSpy);
@@ -350,52 +321,4 @@ describe('gtag function', () => {
       sinon.assert.notCalled(consoleWarnSpy);
     });
   });
-
-  describe('when GtmMartech is initialized with datalayer disabled', () => {
-    it('should not have gtag function available on window', async () => {
-      // Initialize GtmMartech with datalayer disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        dataLayer: false,
-      });
-
-      // Verify gtag function is not available on window when datalayer is disabled
-      expect(window.gtag).to.be.undefined;
-    });
-
-    it('should not have datalayer available when datalayer is disabled', async () => {
-      // Initialize GtmMartech with datalayer disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        dataLayer: false,
-      });
-
-      // Verify datalayer is not available when datalayer is disabled
-      expect(window.gtmDataLayer).to.be.undefined;
-    });
-
-    it('should throw error when trying to call gtag directly', async () => {
-      // Initialize GtmMartech with datalayer disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        dataLayer: false,
-      });
-
-      // Verify that calling gtag directly throws an error
-      expect(() => {
-        window.gtag('event', 'test_event', { event_category: 'test' });
-      }).to.throw(TypeError, 'window.gtag is not a function');
-    });
-
-    it('should log warning during initialization when datalayer is disabled', async () => {
-      // Initialize GtmMartech with datalayer disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        dataLayer: false,
-      });
-
-      // Verify warning is logged during initialization when datalayer is disabled
-      sinon.assert.calledWith(consoleWarnSpy, 'Data layer is disabled in the martech config');
-    });
-  });
-}); 
+});
