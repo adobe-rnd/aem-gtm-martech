@@ -99,42 +99,46 @@ To properly connect and configure the plugin for your project, you'll need to ed
 
 Add the following lines at the end of your `head.html`, to speed up the page load:
 ```html
+<script nonce="aem" src="/scripts/gtm-martech.js" type="module"></script>
 <link rel="preload" as="script" crossorigin="anonymous" href="/plugins/gtm-martech/src/index.js"/>
 <link rel="preconnect" href="https://www.googletagmanager.com"/>
 ```
 
-### 2. Import the Plugin
+### 2. Add Martech Helper Script
 
-Import the plugin at the top of your `scripts.js` file:
-```js
-import { GtmMartech } from '../plugins/gtm-martech/src/index.js';
-```
+Add a script to encompass the intialization of the plugin. This will can be used to import in any context necessary to peform the different operations.
 
-### 3. Initialize the Plugin
-
-Create an instance of the plugin. This should be done near the top of your `scripts.js` file, so that the appropriate methods can be called in their respective lifecycle phase.
+This is a template file for use, suggested file name is "gtm-martech.js".
 
 ```js
-const { eager, lazy, delayed } = new GtmMartech({
-  
-  anaytics: /* enable/disable GA4 (default: enabled) */,
-  dataLayer: /* enable/disable the DataLayer initialization (default: enabled) */,
-  dataLayerInstanceName: /* Name of the DataLayer to use for all events. (default 'gtmDataLayer') */,
+// eslint-disable-next-line import/no-relative-packages
+import GtmMartech from '../plugins/gtm-martech/src/index.js';
+
+// For DA Preview support.
+const disabled = window.location.search.includes('martech=off');
+
+const martech = new GtmMartech({
+  analytics: !disabled,
   tags: [/* One or more GA4 Measumrent Ids */],
   containers: {
     lazy: [/* Zero or more GTM Container Ids to load during Lazy Phase */],
     lazy: [/* Zero or more GTM Container Ids to load during Delayed Phase */],
   },
   pageMetadata: { /* Metadata to pass on during the intializaton of the GA4 tag */ },
-  consent: /* require consent (default: enabled) */,
+  consent: !disabled,
   consentCallback: /* Function that handles consent processing, if consent is enabled, this must be specified */,
   decorateCallback: /* Function to call on each found or loaded Section/Block */,
 });
 
+export default martech
 ```
-Note that:
-- If `consent` is enabled, then by default all [consent types](https://developers.google.com/tag-platform/security/concepts/consent-mode#consent-types) will be set to `denied`. 
-- If `consent` is enabled, then a `consentCallback` must be specified. 
+
+### 3. Import the plugin
+
+Import the plugin at the top of your `scripts.js` file:
+```js
+import GtmMartech from './gtm-martech.js';
+```
 
 ### 4. Call Eager Phase Function
 
@@ -147,7 +151,7 @@ async function loadEager(doc) {
     decorateMain(main);
     doc.body.classList.add('appear');
     await Promise.all([
-      eager(),
+      GtmMartech.eager(),
       loadSection(main.querySelector('.section'), waitForFirstImage),
     ]);
   }
@@ -166,7 +170,7 @@ Update the `loadLazy` function, to call plugin's lazy phase.
 async function loadLazy(doc) {
   …
     await loadSections(main);
-    await lazy();
+    await GtmMartech.lazy();
   …
 }
 ```
@@ -179,7 +183,7 @@ Update the `loadDelayed` function to call the plugin's delayed phase, after a ti
 ```js
 function loadDelayed() {
   …
-  window.setTimeout(delayed, 1000);
+  window.setTimeout(GtmMartech.delayed, 1000);
   window.setTimeout(() => import('./delayed.js'), 3000);
   …
 }
@@ -234,7 +238,6 @@ Initializes the plugin. This should be called in the `scripts.js` outside any li
 
 - **`martechConfig`** `{Object}`: Configuration for this plugin.
   - `analytics` `{Boolean}`: Enable analytics. Default: `true`.
-  - `dataLayer` `{Boolean}`: Enable GTM Data Layer. Default: `true`.
   - `dataLayerInstanceName` `{String}`: Global name for the GTM Data Layer instance. Default: `'gtmDataLayer'`.
   - `tags` `{String[]}`: Array of GA4 Measurement Ids to load.
   - `containers` `{Object|String[]|String}`: Configuration for GTM Containers, or an Array of GTM Container Ids to load during the lazy phase, or a single GTM Container Id to load during the lazy phase.
@@ -247,14 +250,29 @@ Initializes the plugin. This should be called in the `scripts.js` outside any li
 
 ---
 
-### `pushToDataLayer(payload)`
+### `GtmMartech.eager()`
+Performs the eager phase operations for the plugin.
+
+---
+
+### `GtmMartech.lazy()`
+Performs the lazy phase operations for the plugin.
+
+---
+
+### `GtmMartech.delayed()`
+Performs the delayed phase operations for the plugin.
+
+---
+
+### `GtmMartech.pushToDataLayer(payload)`
 Pushes a generic payload to the Adobe Client Data Layer.
 
 - **`payload`** `{Object}`: The data object to push.
 
 ---
 
-### `updateUserConsent(consent)`
+### `GtmMartech.updateUserConsent(consent)`
 Updates the consent according to the []`gtag.js` implementation](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#implementation_example)
 
 - **`consent`** `{Object}`: An object detailing user consent choices.
