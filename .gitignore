@@ -1,6 +1,8 @@
 coverage/
 logs/
 node_modules/
+.vscode/
+!.vscode/launch.json
 
 .DS_Store
 *.bak

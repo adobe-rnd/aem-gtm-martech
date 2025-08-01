@@ -93,6 +93,7 @@ async function loadScript(src) {
   });
 }
 
+
 /**
  * Initialize the data layer
  *
@@ -108,6 +109,7 @@ function initDataLayer(instanceName) {
   window.gtag = gtag;
   return window[instanceName]; // return it so plugin can reference directly
 }
+
 
 /**
  * Initialize GA4 tags.
@@ -235,7 +237,6 @@ class GtmMartech {
     if (this.config.consent) {
       window.gtag('consent', 'default', DEFAULT_CONSENT);
     }
-
     window.gtag('js', new Date());
     this.config.tags.forEach((tag) => {
       window.gtag('config', tag, this.config.pageMetadata);
