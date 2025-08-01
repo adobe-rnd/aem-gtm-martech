@@ -103,17 +103,18 @@ async function loadScript(src) {
  */
 function initDataLayer(instanceName) {
   window[instanceName] = window[instanceName] || [];
-  let ogtag = window.gtag;
+  const ogtag = window.gtag;
   function gtag() {
     if (ogtag) {
+      // eslint-disable-next-line prefer-rest-params, prefer-spread
       ogtag.apply(null, arguments);
     }
+    // eslint-disable-next-line prefer-rest-params
     window[instanceName].push(arguments);
   }
   window.gtag = gtag;
   return window[instanceName]; // return it so plugin can reference directly
 }
-
 
 /**
  * Initialize GA4 tags.
@@ -207,7 +208,7 @@ function observeElements(fn) {
  * GTM Martech plugin.
  *
  * @typedef {Object} GtmMartech
- * @function eager Operations to perform during the eager phase 
+ * @function eager Operations to perform during the eager phase
  * @function lazy Operations to perform during the lazy phase
  * @function delayed Operations to perform during the delayed phase
  * @function pushToDataLayer Push a payload to the data layer
@@ -219,7 +220,6 @@ class GtmMartech {
    * @param {GtmMartechConfig} martechConfig
    */
   constructor(martechConfig = {}) {
-
     // Fix any missing or invalid config values.
     if (typeof martechConfig.tags === 'string') {
       // eslint-disable-next-line no-param-reassign
@@ -294,7 +294,6 @@ class GtmMartech {
     loadGtm.bind(this)('delayed');
   }
 
-
   /**
    * Push a payload to the data layer
    *
@@ -309,7 +308,6 @@ class GtmMartech {
     this.dataLayer.push(payload);
   }
 
-
   /**
    * Update the consent config
    *
@@ -323,7 +321,6 @@ class GtmMartech {
     }
     window.gtag('consent', 'update', consentConfig);
   }
-
 }
 
 export default GtmMartech;
