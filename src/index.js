@@ -24,7 +24,6 @@
  * Default configuration for the plugin.
  * @typedef {Object} GtmMartechConfig
  * @property {Boolean} analytics Whether to initialize analytics
- * @property {Boolean} dataLayer Whether to initialize the data layer
  * @property {String} dataLayerInstanceName The name of the data ayer instance in the global scope
  *                                          (defaults to "gtmDataLayer")
  * @property {Array<String>|String} tags The GA4 tags to initialize
@@ -42,8 +41,6 @@
  *                                    of DataLayer events. The function will be passed all section or block elements found.
  */
 
-let gtm; // instance of GtmMartech for backref
-
 const GTM_HOST = 'https://www.googletagmanager.com';
 
 const DEFAULT_CONSENT = Object.freeze({
@@ -59,7 +56,6 @@ const DEFAULT_CONSENT = Object.freeze({
 
 const DEFAULT_CONFIG = Object.freeze({
   analytics: true,
-  dataLayer: true,
   dataLayerInstanceName: 'gtmDataLayer',
   tags: [],
   containers: {
@@ -68,7 +64,7 @@ const DEFAULT_CONFIG = Object.freeze({
   },
   pageMetadata: {},
   consent: true,
-  consentCallback: () => undefined,
+  consentCallback: () => Promise.resolve(undefined),
   decorateCallback: undefined,
 });
 
@@ -98,45 +94,18 @@ async function loadScript(src) {
 }
 
 /**
- * Push a payload to the data layer
- *
- * @param {Object} payload The payload to push to the data layer
- */
-function pushToDataLayer(payload) {
-  // eslint-disable-next-line no-console
-  console.assert(gtm, 'GtmMartech is not initialized');
-  // eslint-disable-next-line no-console
-  console.assert(gtm.config.dataLayer, 'Data layer is disabled in the martech config');
-  gtm.dataLayer.push(payload);
-}
-
-/**
- * Update the consent config
- *
- * @param {Object} consentConfig The consent config to update
- */
-function updateUserConsent(consentConfig) {
-  window.gtag('consent', 'update', consentConfig);
-}
-
-/**
  * Initialize the data layer
  *
  * @param {String} instanceName The name of the data layer instance in the global scope
  * @returns {Array} The data layer instance
  */
 function initDataLayer(instanceName) {
-  // eslint-disable-next-line func-names
-  window.gtag = function () {
-    // eslint-disable-next-line no-console
-    console.assert(gtm.config.dataLayer, 'Data layer is disabled in the martech config');
+  window[instanceName] = window[instanceName] || [];
+  function gtag() {
     // eslint-disable-next-line prefer-rest-params
     window[instanceName].push(arguments);
-  };
-
-  // eslint-disable-next-line no-console
-  console.assert(gtm.config.dataLayer, 'Data layer is disabled in the martech config');
-  window[instanceName] = window[instanceName] || [];
+  }
+  window.gtag = gtag;
   return window[instanceName]; // return it so plugin can reference directly
 }
 
@@ -147,8 +116,6 @@ function initDataLayer(instanceName) {
  * @param {Array<String>} tags the GA4 tags to initialize
  */
 function initGa(instanceName, tags) {
-  // eslint-disable-next-line no-console
-  console.assert(gtm.config.analytics, 'Analytics is disabled in the martech config');
   tags.forEach((tag) => {
     loadScript(`${GTM_HOST}/gtag/js?id=${tag}&l=${instanceName}`);
   });
@@ -160,12 +127,15 @@ function initGa(instanceName, tags) {
  * @param {String} phase the phase to load
  */
 function loadGtm(phase) {
-  // eslint-disable-next-line no-console
-  console.assert(gtm.config.analytics, 'Analytics is disabled in the martech config');
-  if (gtm.config.containers[phase]?.length > 0) {
-    pushToDataLayer({ event: 'gtm.js', [`gtm.${phase}.start`]: new Date().getTime() });
-    gtm.config.containers[phase].forEach((container) => {
-      loadScript(`${GTM_HOST}/gtm.js?id=${container}&l=${gtm.config.dataLayerInstanceName}`);
+  if (!this.config.analytics) {
+    // eslint-disable-next-line no-console
+    console.warn('Analytics is disabled in the martech config');
+    return;
+  }
+  if (this.config.containers[phase]?.length > 0) {
+    this.pushToDataLayer({ event: 'gtm.js', [`gtm.${phase}.start`]: Date.now() });
+    this.config.containers[phase].forEach((container) => {
+      loadScript(`${GTM_HOST}/gtm.js?id=${container}&l=${this.config.dataLayerInstanceName}`);
     });
   }
 }
@@ -179,6 +149,7 @@ function observeElements(fn) {
   // Protect against double decoration
   const decorate = (el) => {
     if (el.dataset.gtnMartechDecorated) return;
+    // eslint-disable-next-line no-param-reassign
     el.dataset.gtmMartechDecorated = true;
     fn(el);
   };
@@ -230,35 +201,36 @@ function observeElements(fn) {
  * GTM Martech plugin.
  *
  * @typedef {Object} GtmMartech
-
-* @function eager Operations to perform during the eager phase
+ * @function eager Operations to perform during the eager phase
  * @function lazy Operations to perform during the lazy phase
  * @function delayed Operations to perform during the delayed phase
+ * @function pushToDataLayer Push a payload to the data layer
+ * @function updateUserConsent Update the consent config
  */
 class GtmMartech {
   /**
    * Create a new GtmMartech instance.
    * @param {GtmMartechConfig} martechConfig
    */
-  constructor(martechConfig) {
-    gtm = this;
-
+  constructor(martechConfig = {}) {
     // Fix any missing or invalid config values.
     if (typeof martechConfig.tags === 'string') {
+      // eslint-disable-next-line no-param-reassign
       martechConfig.tags = [martechConfig.tags];
     }
     if (typeof martechConfig.containers === 'string') {
+      // eslint-disable-next-line no-param-reassign
       martechConfig.containers = { lazy: [martechConfig.containers], delayed: [] };
     } else if (Array.isArray(martechConfig.containers)) {
+      // eslint-disable-next-line no-param-reassign
       martechConfig.containers = { lazy: martechConfig.containers, delayed: [] };
     }
 
     // eslint-disable-next-line no-console
-    console.assert(martechConfig.tags.length > 0, 'No GA4 tag provided.');
+    console.assert(martechConfig.tags?.length > 0, 'No GA4 tag provided.');
 
     this.config = { ...DEFAULT_CONFIG, ...martechConfig };
     this.dataLayer = initDataLayer(this.config.dataLayerInstanceName);
-
     // Default consent, if specified
     if (this.config.consent) {
       window.gtag('consent', 'default', DEFAULT_CONSENT);
@@ -270,30 +242,64 @@ class GtmMartech {
     });
   }
 
+  /**
+   * Operations to perform during the eager phase
+   */
   // eslint-disable-next-line class-methods-use-this
   async eager() {
-    // Load the GA4 tag(s)
-    initGa(gtm.config.dataLayerInstanceName, gtm.config.tags);
+    // Load the GA4 tag(s) if analytics is enabled
+    if (this.config.analytics) {
+      initGa(this.config.dataLayerInstanceName, this.config.tags);
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn('Analytics is disabled in the martech config');
+    }
   }
 
+  /**
+   * Operations to perform during the lazy phase
+   */
   // eslint-disable-next-line class-methods-use-this
   async lazy() {
     // Update consent, if specified
-    if (gtm.config.consent) {
-      gtm.config.consentCallback().then(updateUserConsent);
+    if (this.config.consent) {
+      this.config.consentCallback().then(this.updateUserConsent.bind(this));
     }
+    this.pushToDataLayer({ event: 'gtm.js', 'gtm.start': Date.now() });
     // Load the lazy GTM containers
-    loadGtm('lazy');
-    if (gtm.config.decorateCallback) {
-      observeElements(gtm.config.decorateCallback);
+    loadGtm.bind(this)('lazy');
+    if (this.config.decorateCallback) {
+      observeElements(this.config.decorateCallback);
     }
   }
 
+  /**
+   * Operations to perform during the delayed phase
+   */
   // eslint-disable-next-line class-methods-use-this
   async delayed() {
     // Load the delayed GTM containers
-    loadGtm('delayed');
+    loadGtm.bind(this)('delayed');
+  }
+
+  /**
+   * Push a payload to the data layer
+   *
+   * @param {Object} payload The payload to push to the data layer
+   */
+  pushToDataLayer(payload) {
+    this.dataLayer.push(payload);
+  }
+
+  /**
+   * Update the consent config
+   *
+   * @param {Object} consentConfig The consent config to update
+   */
+  // eslint-disable-next-line class-methods-use-this
+  updateUserConsent(consentConfig) {
+    window.gtag('consent', 'update', consentConfig);
   }
 }
 
-export { GtmMartech, pushToDataLayer, updateUserConsent };
+export default GtmMartech;
