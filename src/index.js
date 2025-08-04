@@ -148,7 +148,7 @@ function loadGtm(phase) {
 function observeElements(fn) {
   // Protect against double decoration
   const decorate = (el) => {
-    if (el.dataset.gtnMartechDecorated) return;
+    if (el.dataset.gtmMartechDecorated) return;
     // eslint-disable-next-line no-param-reassign
     el.dataset.gtmMartechDecorated = true;
     fn(el);
@@ -180,6 +180,12 @@ function observeElements(fn) {
         if (node.nodeType !== Node.ELEMENT_NODE) return;
 
         loadingObserver.observe(node, opts);
+        if (node.dataset.blockStatus === 'loaded'
+          || node.dataset.sectionStatus === 'loaded') {
+          decorate(node);
+        } else if (node.classList.contains('fragment-wrapper')) {
+          addedObserver.observe(node, { childList: true });
+        }
         node.querySelectorAll('[data-block-status="loaded"],[data-section-status="loaded"]').forEach(decorate);
         node.querySelectorAll('.fragment-wrapper').forEach((el) => {
           addedObserver.observe(el, { childList: true });

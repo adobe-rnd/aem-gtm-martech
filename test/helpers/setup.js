@@ -42,8 +42,8 @@ export class TestSetup {
    */
   setup(options = {}) {
     const { html, includeMain = false } = options;
-    
-    const defaultHtml = includeMain 
+
+    const defaultHtml = includeMain
       ? '<!DOCTYPE html><html><head></head><body><main></main></body></html>'
       : '<!DOCTYPE html><html><head></head><body></body></html>';
 
@@ -60,6 +60,9 @@ export class TestSetup {
     global.window = this.window;
     global.document = this.document;
     global.Node = this.window.Node;
+
+    // Add MutationObserver to global scope for testing
+    global.MutationObserver = this.window.MutationObserver;
 
     return {
       dom: this.dom,
@@ -89,7 +92,7 @@ export class TestSetup {
    */
   cleanup() {
     // Restore all spies
-    this.spies.forEach(spy => {
+    this.spies.forEach((spy) => {
       if (spy && typeof spy.restore === 'function') {
         spy.restore();
       }
@@ -100,6 +103,7 @@ export class TestSetup {
     delete global.window;
     delete global.document;
     delete global.Node;
+    delete global.MutationObserver;
   }
 }
 
@@ -116,4 +120,3 @@ export function createGtmMartech(config = {}) {
 
   return new GtmMartech(defaultConfig);
 }
- 
