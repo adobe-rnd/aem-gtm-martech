@@ -13,45 +13,25 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { JSDOM } from 'jsdom';
-import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
-const MEASUREMENT_ID_2 = 'GA_MEASUREMENT_ID_2';
+import { TestSetup, TEST_CONSTANTS, createGtmMartech } from './helpers/setup.js';
 
 describe('GtmMartech eager function', () => {
-  let dom;
-  let document;
-  let window;
+  let testSetup;
+  let consoleWarnSpy;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
-
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
+    testSetup = new TestSetup();
+    const setup = testSetup.setupWithConsoleWarn();
+    consoleWarnSpy = setup.consoleWarnSpy;
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
+    testSetup.cleanup();
   });
 
   it('should load GA4 scripts during eager phase', async () => {
     // Create GtmMartech instance with test configuration
-    const gtmMartech = new GtmMartech({
-      tags: [MEASUREMENT_ID_1],
-    });
+    const gtmMartech = createGtmMartech();
 
     // Call the eager function
     await gtmMartech.eager();
@@ -59,19 +39,15 @@ describe('GtmMartech eager function', () => {
     const script = document.querySelector('head > script[src*="MEASUREMENT_ID_1"]');
     expect(script).to.exist;
     expect(script.src).to.include('googletagmanager.com/gtag/js');
-    expect(script.src).to.include(`id=${MEASUREMENT_ID_1}`);
+    expect(script.src).to.include(`id=${TEST_CONSTANTS.MEASUREMENT_ID_1}`);
     expect(script.getAttribute('async')).to.equal('true');
     expect(script.src).to.include('l=gtmDataLayer');
   });
 
   it('should not load scripts if analytics is disabled', async () => {
-    // Spy on console.warn to check for the warning when analytics is disabled
-    const consoleWarnSpy = sinon.spy(console, 'warn');
-
     // Create GtmMartech instance with analytics disabled
-    const gtmMartech = new GtmMartech({
+    const gtmMartech = createGtmMartech({
       analytics: false,
-      tags: [MEASUREMENT_ID_1],
     });
 
     // Call the eager function
@@ -79,7 +55,6 @@ describe('GtmMartech eager function', () => {
 
     // Verify that the warning was logged for disabled analytics
     sinon.assert.calledWith(consoleWarnSpy, 'Analytics is disabled in the martech config');
-    consoleWarnSpy.restore();
 
     // Verify that no scripts were loaded
     const script = document.querySelector('head > script[src*="MEASUREMENT_ID_1"]');
@@ -88,7 +63,7 @@ describe('GtmMartech eager function', () => {
 
   it('should not load scripts when tags array is empty', async () => {
     // Test empty tags array
-    const gtmMartech = new GtmMartech({ tags: [] });
+    const gtmMartech = createGtmMartech({ tags: [] });
     await gtmMartech.eager();
     const emptyScript = document.querySelector('head > script[src*="MEASUREMENT_ID_1"]');
     expect(emptyScript).to.not.exist;
@@ -96,7 +71,7 @@ describe('GtmMartech eager function', () => {
 
   it('should load script when tag is provided as string', async () => {
     // Test single tag as string
-    const gtmMartech = new GtmMartech({ tags: MEASUREMENT_ID_1 });
+    const gtmMartech = createGtmMartech({ tags: TEST_CONSTANTS.MEASUREMENT_ID_1 });
     await gtmMartech.eager();
     const stringScript = document.querySelector('head > script[src*="MEASUREMENT_ID_1"]');
     expect(stringScript).to.exist;
@@ -104,8 +79,8 @@ describe('GtmMartech eager function', () => {
 
   it('should load multiple GA4 scripts during eager phase', async () => {
     // Create GtmMartech instance with multiple tags
-    const gtmMartech = new GtmMartech({
-      tags: [MEASUREMENT_ID_1, MEASUREMENT_ID_2],
+    const gtmMartech = createGtmMartech({
+      tags: [TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_2],
     });
 
     // Call the eager function
@@ -121,8 +96,8 @@ describe('GtmMartech eager function', () => {
 
   it('should handle duplicate tags gracefully', async () => {
     // Create GtmMartech instance with duplicate tags
-    const gtmMartech = new GtmMartech({
-      tags: [MEASUREMENT_ID_1, MEASUREMENT_ID_1, MEASUREMENT_ID_2],
+    const gtmMartech = createGtmMartech({
+      tags: [TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_2],
     });
 
     // Call the eager function
@@ -138,9 +113,7 @@ describe('GtmMartech eager function', () => {
 
   it('should not duplicate scripts if eager is called multiple times', async () => {
     // Create GtmMartech instance
-    const gtmMartech = new GtmMartech({
-      tags: [MEASUREMENT_ID_1],
-    });
+    const gtmMartech = createGtmMartech();
 
     // Call the eager function twice
     await gtmMartech.eager();

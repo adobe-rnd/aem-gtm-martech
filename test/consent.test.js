@@ -12,45 +12,26 @@
 /* eslint-disable no-unused-vars, no-unused-expressions */
 
 import { expect } from 'chai';
-import { JSDOM } from 'jsdom';
-import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
+import { TestSetup, createGtmMartech } from './helpers/setup.js';
 
 describe('GtmMartech consent functionality', () => {
-  let dom;
-  let document;
+  let testSetup;
   let window;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
-
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
+    testSetup = new TestSetup();
+    const setup = testSetup.setup();
+    window = setup.window;
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
+    testSetup.cleanup();
   });
 
   describe('when consent is enabled', () => {
     it('should call gtag consent default', () => {
       // Create GtmMartech instance with consent enabled (default)
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       // Verify that gtag function exists
       expect(window.gtag).to.be.a('function');
@@ -65,10 +46,7 @@ describe('GtmMartech consent functionality', () => {
   describe('when consent is disabled', () => {
     it('should not call gtag consent', () => {
       // Create GtmMartech instance with consent disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        consent: false,
-      });
+      const gtmMartech = createGtmMartech({ consent: false });
 
       // Verify that gtag function exists
       expect(window.gtag).to.be.a('function');

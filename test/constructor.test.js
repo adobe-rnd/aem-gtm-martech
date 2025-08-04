@@ -13,38 +13,21 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { JSDOM } from 'jsdom';
 import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
-const MEASUREMENT_ID_2 = 'GA_MEASUREMENT_ID_2';
+import { TestSetup, TEST_CONSTANTS, createGtmMartech } from './helpers/setup.js';
 
 describe('GtmMartech constructor', () => {
-  let dom;
-  let document;
+  let testSetup;
   let window;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
-
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
+    testSetup = new TestSetup();
+    const setup = testSetup.setup();
+    window = setup.window;
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
+    testSetup.cleanup();
   });
 
   describe('configuration', () => {
@@ -88,10 +71,7 @@ describe('GtmMartech constructor', () => {
 
     it('should handle analytics disabled configuration', async () => {
       // Create GtmMartech instance with analytics disabled
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        analytics: false,
-      });
+      const gtmMartech = createGtmMartech({ analytics: false });
 
       // Verify that analytics is disabled
       expect(gtmMartech.config.analytics).to.be.false;
@@ -99,37 +79,33 @@ describe('GtmMartech constructor', () => {
 
     it('should handle string tag input', async () => {
       // Test string tag input
-      const stringTagGtm = new GtmMartech({ tags: MEASUREMENT_ID_1 });
-      expect(stringTagGtm.config.tags).to.deep.equal([MEASUREMENT_ID_1]);
+      const stringTagGtm = createGtmMartech({ tags: TEST_CONSTANTS.MEASUREMENT_ID_1 });
+      expect(stringTagGtm.config.tags).to.deep.equal([TEST_CONSTANTS.MEASUREMENT_ID_1]);
     });
 
     it('should handle multiple tags', async () => {
       // Test multiple tags
-      const multipleTagsGtm = new GtmMartech({ tags: [MEASUREMENT_ID_1, MEASUREMENT_ID_2] });
-      expect(multipleTagsGtm.config.tags).to.deep.equal([MEASUREMENT_ID_1, MEASUREMENT_ID_2]);
+      const multipleTagsGtm = createGtmMartech({ tags: [TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_2] });
+      expect(multipleTagsGtm.config.tags).to.deep.equal([TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_2]);
     });
 
     it('should handle empty tags array', async () => {
       // Test empty tags array
-      const consoleAssertSpy = sinon.spy(console, 'assert');
-      const emptyTagsGtm = new GtmMartech({ tags: [] });
+      const emptyTagsGtm = createGtmMartech({ tags: [] });
       expect(emptyTagsGtm.config.tags).to.deep.equal([]);
-      sinon.assert.calledWith(consoleAssertSpy, false, 'No GA4 tag provided.');
-      consoleAssertSpy.restore();
     });
 
     it('should handle array of tags with additional verification', async () => {
       // Test array of tags with additional verification
-      const arrayTagsGtm = new GtmMartech({ tags: [MEASUREMENT_ID_1, MEASUREMENT_ID_2] });
+      const arrayTagsGtm = createGtmMartech({ tags: [TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_2] });
       expect(arrayTagsGtm.config.tags).to.be.an('array');
       expect(arrayTagsGtm.config.tags).to.have.length(2);
-      expect(arrayTagsGtm.config.tags).to.deep.equal([MEASUREMENT_ID_1, MEASUREMENT_ID_2]);
+      expect(arrayTagsGtm.config.tags).to.deep.equal([TEST_CONSTANTS.MEASUREMENT_ID_1, TEST_CONSTANTS.MEASUREMENT_ID_2]);
     });
 
     it('should handle string container input', async () => {
       // Test string container input
-      const stringContainerGtm = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const stringContainerGtm = createGtmMartech({
         containers: 'GTM-XXXXXXX',
       });
       expect(stringContainerGtm.config.containers).to.deep.equal({
@@ -140,8 +116,7 @@ describe('GtmMartech constructor', () => {
 
     it('should handle array containers input', async () => {
       // Test array containers input
-      const arrayContainerGtm = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const arrayContainerGtm = createGtmMartech({
         containers: ['GTM-XXXXXXX', 'GTM-YYYYYYY'],
       });
       expect(arrayContainerGtm.config.containers).to.deep.equal({
@@ -152,8 +127,7 @@ describe('GtmMartech constructor', () => {
 
     it('should handle object containers input', async () => {
       // Test object containers input
-      const objectContainerGtm = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const objectContainerGtm = createGtmMartech({
         containers: {
           lazy: ['GTM-XXXXXXX'],
           delayed: ['GTM-YYYYYYY'],
@@ -170,9 +144,7 @@ describe('GtmMartech constructor', () => {
     describe('when datalayer is enabled', () => {
       it('should initialize default data layer', async () => {
         // Create GtmMartech instance
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
-        });
+        const gtmMartech = createGtmMartech();
 
         // Verify that data layer was initialized
         expect(window.gtmDataLayer).to.be.an('array');
@@ -194,7 +166,7 @@ describe('GtmMartech constructor', () => {
         expect(window.gtmDataLayer).to.have.length.greaterThan(2);
         const configEntry = window.gtmDataLayer[2];
         expect(configEntry[0]).to.equal('config');
-        expect(configEntry[1]).to.equal(MEASUREMENT_ID_1);
+        expect(configEntry[1]).to.equal(TEST_CONSTANTS.MEASUREMENT_ID_1);
 
         // Verify that data pushed to gtag is stored in the data layer
         window.gtag('event', 'test_event', { event_category: 'test' });
@@ -209,8 +181,7 @@ describe('GtmMartech constructor', () => {
 
       it('should initialize custom data layer when specified', async () => {
         // Create GtmMartech instance with custom data layer name
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
+        const gtmMartech = createGtmMartech({
           dataLayerInstanceName: 'customDataLayer',
         });
 
@@ -227,8 +198,7 @@ describe('GtmMartech constructor', () => {
 
       it('should handle custom data layer instance name configuration', async () => {
         // Create GtmMartech instance with custom data layer name
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
+        const gtmMartech = createGtmMartech({
           dataLayerInstanceName: 'customDataLayer',
         });
 

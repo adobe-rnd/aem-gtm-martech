@@ -13,50 +13,26 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { JSDOM } from 'jsdom';
-import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
+import { TestSetup, TEST_CONSTANTS, createGtmMartech } from './helpers/setup.js';
 
 describe('gtag function', () => {
-  let dom;
-  let document;
-  let window;
+  let testSetup;
   let consoleWarnSpy;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
-
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
-
-    // Spy on console.warn
-    consoleWarnSpy = sinon.spy(console, 'warn');
+    testSetup = new TestSetup();
+    const setup = testSetup.setupWithConsoleWarn();
+    consoleWarnSpy = setup.consoleWarnSpy;
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
-    consoleWarnSpy.restore();
+    testSetup.cleanup();
   });
 
   describe('when GtmMartech is initialized', () => {
     it('should be available on window object', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       // Verify gtag function is available on window
       expect(window.gtag).to.be.a('function');
@@ -64,9 +40,7 @@ describe('gtag function', () => {
 
     it('should push arguments to datalayer', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -88,14 +62,12 @@ describe('gtag function', () => {
 
     it('should handle multiple calls', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
       // Test multiple calls
-      window.gtag('config', MEASUREMENT_ID_1, { custom_parameter: 'value' });
+      window.gtag('config', TEST_CONSTANTS.MEASUREMENT_ID_1, { custom_parameter: 'value' });
       window.gtag('consent', 'update', { analytics_storage: 'granted' });
       window.gtag('js', new Date('2023-01-01T00:00:00Z'));
 
@@ -114,8 +86,7 @@ describe('gtag function', () => {
 
     it('should work with custom datalayer instance name', async () => {
       // Create new instance with custom datalayer name
-      const customGtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const customGtmMartech = createGtmMartech({
         dataLayerInstanceName: 'customDataLayer',
       });
 
@@ -138,9 +109,7 @@ describe('gtag function', () => {
 
     it('should handle complex ecommerce events', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -180,9 +149,7 @@ describe('gtag function', () => {
 
     it('should handle large arguments', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -203,9 +170,7 @@ describe('gtag function', () => {
 
     it('should handle circular references', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -227,9 +192,7 @@ describe('gtag function', () => {
 
     it('should handle function arguments', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -254,9 +217,7 @@ describe('gtag function', () => {
 
     it('should handle null and undefined arguments', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -276,9 +237,7 @@ describe('gtag function', () => {
 
     it('should handle empty strings', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 

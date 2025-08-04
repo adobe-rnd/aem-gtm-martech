@@ -11,47 +11,24 @@
  */
 
 import sinon from 'sinon';
-import { JSDOM } from 'jsdom';
-import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
+import { TestSetup, createGtmMartech } from './helpers/setup.js';
 
 describe('GtmMartech updateUserConsent function', () => {
-  let dom;
-  let document;
-  let window;
+  let testSetup;
   let gtmMartech;
   let gtagSpy;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
+    testSetup = new TestSetup();
+    testSetup.setup();
+    gtmMartech = createGtmMartech();
 
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
-
-    // Create GtmMartech instance
-    gtmMartech = new GtmMartech({
-      tags: [MEASUREMENT_ID_1],
-    });
-
-    // Spy on the gtag function
-    gtagSpy = sinon.spy(window, 'gtag');
+    // Now that GtmMartech is initialized, we can spy on gtag
+    gtagSpy = sinon.spy(testSetup.window, 'gtag');
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
+    testSetup.cleanup();
     gtagSpy.restore();
   });
 

@@ -13,44 +13,20 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { JSDOM } from 'jsdom';
-import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
-const GTM_CONTAINER_1 = 'GTM-ABC123';
-const GTM_CONTAINER_2 = 'GTM-DEF456';
+import { TestSetup, TEST_CONSTANTS, createGtmMartech } from './helpers/setup.js';
 
 describe('GtmMartech lazy function', () => {
-  let dom;
-  let document;
-  let window;
+  let testSetup;
   let consoleWarnSpy;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body><main></main></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
-
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
-
-    // Spy on console.warn
-    consoleWarnSpy = sinon.spy(console, 'warn');
+    testSetup = new TestSetup();
+    const setup = testSetup.setupWithConsoleWarn({ includeMain: true });
+    consoleWarnSpy = setup.consoleWarnSpy;
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
-    consoleWarnSpy.restore();
+    testSetup.cleanup();
   });
 
   describe('consent', () => {
@@ -63,8 +39,7 @@ describe('GtmMartech lazy function', () => {
         const updateUserConsentSpy = sinon.spy();
 
         // Create GtmMartech instance with consent enabled
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
+        const gtmMartech = createGtmMartech({
           consent: true,
           consentCallback,
         });
@@ -90,8 +65,7 @@ describe('GtmMartech lazy function', () => {
         const updateUserConsentSpy = sinon.spy();
 
         // Create GtmMartech instance with consent enabled
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
+        const gtmMartech = createGtmMartech({
           consent: true,
           consentCallback,
         });
@@ -114,8 +88,7 @@ describe('GtmMartech lazy function', () => {
         const updateUserConsentSpy = sinon.spy();
 
         // Create GtmMartech instance with consent enabled
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
+        const gtmMartech = createGtmMartech({
           consent: true,
           consentCallback,
         });
@@ -140,8 +113,7 @@ describe('GtmMartech lazy function', () => {
         const updateUserConsentSpy = sinon.spy();
 
         // Create GtmMartech instance with consent disabled
-        const gtmMartech = new GtmMartech({
-          tags: [MEASUREMENT_ID_1],
+        const gtmMartech = createGtmMartech({
           consent: false,
           consentCallback,
         });
@@ -164,8 +136,7 @@ describe('GtmMartech lazy function', () => {
   describe('data layer events', () => {
     it('should push gtm.js event to data layer', async () => {
       // Create GtmMartech instance
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const gtmMartech = createGtmMartech({
         consent: false,
       });
 
@@ -186,10 +157,9 @@ describe('GtmMartech lazy function', () => {
   describe('GTM container loading', () => {
     it('should load lazy GTM containers', async () => {
       // Create GtmMartech instance with lazy containers
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const gtmMartech = createGtmMartech({
         containers: {
-          lazy: [GTM_CONTAINER_1, GTM_CONTAINER_2],
+          lazy: [TEST_CONSTANTS.GTM_CONTAINER_1, TEST_CONSTANTS.GTM_CONTAINER_2],
           delayed: [],
         },
         consent: false,
@@ -199,8 +169,8 @@ describe('GtmMartech lazy function', () => {
       await gtmMartech.lazy();
 
       // Verify GTM scripts were loaded
-      const script1 = document.querySelector(`head > script[src*="${GTM_CONTAINER_1}"]`);
-      const script2 = document.querySelector(`head > script[src*="${GTM_CONTAINER_2}"]`);
+      const script1 = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_1}"]`);
+      const script2 = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_2}"]`);
 
       expect(script1).to.exist;
       expect(script2).to.exist;
@@ -210,11 +180,10 @@ describe('GtmMartech lazy function', () => {
 
     it('should not load GTM containers when analytics is disabled', async () => {
       // Create GtmMartech instance with analytics disabled
-      const gtmMartech = new GtmMartech({
+      const gtmMartech = createGtmMartech({
         analytics: false,
-        tags: [MEASUREMENT_ID_1],
         containers: {
-          lazy: [GTM_CONTAINER_1],
+          lazy: [TEST_CONSTANTS.GTM_CONTAINER_1],
           delayed: [],
         },
         consent: false,
@@ -227,17 +196,16 @@ describe('GtmMartech lazy function', () => {
       sinon.assert.calledWith(consoleWarnSpy, 'Analytics is disabled in the martech config');
 
       // Verify no GTM scripts were loaded
-      const script = document.querySelector(`head > script[src*="${GTM_CONTAINER_1}"]`);
+      const script = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_1}"]`);
       expect(script).to.not.exist;
     });
 
     it('should not load GTM containers when lazy containers array is empty', async () => {
       // Create GtmMartech instance with empty lazy containers
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const gtmMartech = createGtmMartech({
         containers: {
           lazy: [],
-          delayed: [GTM_CONTAINER_1],
+          delayed: [TEST_CONSTANTS.GTM_CONTAINER_1],
         },
         consent: false,
       });
@@ -246,15 +214,14 @@ describe('GtmMartech lazy function', () => {
       await gtmMartech.lazy();
 
       // Verify no GTM scripts were loaded
-      const script = document.querySelector(`head > script[src*="${GTM_CONTAINER_1}"]`);
+      const script = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_1}"]`);
       expect(script).to.not.exist;
     });
 
     it('should handle containers provided as string', async () => {
       // Create GtmMartech instance with containers as string
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        containers: GTM_CONTAINER_1,
+      const gtmMartech = createGtmMartech({
+        containers: TEST_CONSTANTS.GTM_CONTAINER_1,
         consent: false,
       });
 
@@ -262,15 +229,14 @@ describe('GtmMartech lazy function', () => {
       await gtmMartech.lazy();
 
       // Verify GTM script was loaded
-      const script = document.querySelector(`head > script[src*="${GTM_CONTAINER_1}"]`);
+      const script = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_1}"]`);
       expect(script).to.exist;
     });
 
     it('should handle containers provided as array', async () => {
       // Create GtmMartech instance with containers as array
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-        containers: [GTM_CONTAINER_1, GTM_CONTAINER_2],
+      const gtmMartech = createGtmMartech({
+        containers: [TEST_CONSTANTS.GTM_CONTAINER_1, TEST_CONSTANTS.GTM_CONTAINER_2],
         consent: false,
       });
 
@@ -278,18 +244,17 @@ describe('GtmMartech lazy function', () => {
       await gtmMartech.lazy();
 
       // Verify GTM scripts were loaded
-      const script1 = document.querySelector(`head > script[src*="${GTM_CONTAINER_1}"]`);
-      const script2 = document.querySelector(`head > script[src*="${GTM_CONTAINER_2}"]`);
+      const script1 = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_1}"]`);
+      const script2 = document.querySelector(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_2}"]`);
       expect(script1).to.exist;
       expect(script2).to.exist;
     });
 
     it('should not duplicate GTM scripts if lazy is called multiple times', async () => {
       // Create GtmMartech instance
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const gtmMartech = createGtmMartech({
         containers: {
-          lazy: [GTM_CONTAINER_1],
+          lazy: [TEST_CONSTANTS.GTM_CONTAINER_1],
           delayed: [],
         },
         consent: false,
@@ -300,7 +265,7 @@ describe('GtmMartech lazy function', () => {
       await gtmMartech.lazy();
 
       // Verify only one script was loaded (no duplicates)
-      const scripts = document.querySelectorAll(`head > script[src*="${GTM_CONTAINER_1}"]`);
+      const scripts = document.querySelectorAll(`head > script[src*="${TEST_CONSTANTS.GTM_CONTAINER_1}"]`);
       expect(scripts).to.have.length(1);
     });
   });

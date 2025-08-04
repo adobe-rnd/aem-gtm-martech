@@ -13,50 +13,26 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { JSDOM } from 'jsdom';
-import GtmMartech from '../src/index.js';
-
-const MEASUREMENT_ID_1 = 'GA_MEASUREMENT_ID_1';
+import { TestSetup, TEST_CONSTANTS, createGtmMartech } from './helpers/setup.js';
 
 describe('pushToDataLayer function', () => {
-  let dom;
-  let document;
-  let window;
+  let testSetup;
   let consoleWarnSpy;
 
   beforeEach(() => {
-    // Create a new JSDOM instance for each test
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-    });
-
-    document = dom.window.document;
-    window = dom.window;
-
-    // Mock the global window and document
-    global.window = window;
-    global.document = document;
-    global.Node = window.Node;
-
-    // Spy on console.warn
-    consoleWarnSpy = sinon.spy(console, 'warn');
+    testSetup = new TestSetup();
+    const setup = testSetup.setupWithConsoleWarn();
+    consoleWarnSpy = setup.consoleWarnSpy;
   });
 
   afterEach(() => {
-    // Clean up
-    delete global.window;
-    delete global.document;
-    delete global.Node;
-    consoleWarnSpy.restore();
+    testSetup.cleanup();
   });
 
   describe('when GtmMartech is initialized with datalayer enabled', () => {
     it('should push payload to datalayer successfully', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const payload = { event: 'test_event', event_category: 'test' };
       const initialLength = window.gtmDataLayer.length;
@@ -73,9 +49,7 @@ describe('pushToDataLayer function', () => {
 
     it('should handle multiple payloads', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const payload1 = { event: 'first_event', category: 'test' };
       const payload2 = { event: 'second_event', category: 'test' };
@@ -99,9 +73,7 @@ describe('pushToDataLayer function', () => {
 
     it('should handle complex payload objects', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const complexPayload = {
         event: 'purchase',
@@ -142,9 +114,7 @@ describe('pushToDataLayer function', () => {
 
     it('should handle primitive payloads', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const stringPayload = 'test_string';
       const numberPayload = 42;
@@ -168,9 +138,7 @@ describe('pushToDataLayer function', () => {
 
     it('should handle null and undefined payloads', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -188,8 +156,7 @@ describe('pushToDataLayer function', () => {
 
     it('should work with custom datalayer instance name', async () => {
       // Create new instance with custom datalayer name
-      const customGtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
+      const customGtmMartech = createGtmMartech({
         dataLayerInstanceName: 'customDataLayer',
       });
 
@@ -210,9 +177,7 @@ describe('pushToDataLayer function', () => {
   describe('edge cases', () => {
     it('should handle large payload', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -233,9 +198,7 @@ describe('pushToDataLayer function', () => {
 
     it('should handle circular reference payload', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
@@ -254,9 +217,7 @@ describe('pushToDataLayer function', () => {
 
     it('should handle function payload', async () => {
       // Initialize GtmMartech
-      const gtmMartech = new GtmMartech({
-        tags: [MEASUREMENT_ID_1],
-      });
+      const gtmMartech = createGtmMartech();
 
       const initialLength = window.gtmDataLayer.length;
 
