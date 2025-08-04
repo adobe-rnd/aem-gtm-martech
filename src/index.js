@@ -148,7 +148,7 @@ function loadGtm(phase) {
 function observeElements(fn) {
   // Protect against double decoration
   const decorate = (el) => {
-    if (el.dataset.gtnMartechDecorated) return;
+    if (el.dataset.gtmMartechDecorated) return;
     // eslint-disable-next-line no-param-reassign
     el.dataset.gtmMartechDecorated = true;
     fn(el);
@@ -180,6 +180,12 @@ function observeElements(fn) {
         if (node.nodeType !== Node.ELEMENT_NODE) return;
 
         loadingObserver.observe(node, opts);
+        if (node.dataset.blockStatus === 'loaded'
+          || node.dataset.sectionStatus === 'loaded') {
+          decorate(node);
+        } else if (node.classList.contains('fragment-wrapper')) {
+          addedObserver.observe(node, { childList: true });
+        }
         node.querySelectorAll('[data-block-status="loaded"],[data-section-status="loaded"]').forEach(decorate);
         node.querySelectorAll('.fragment-wrapper').forEach((el) => {
           addedObserver.observe(el, { childList: true });
@@ -235,7 +241,6 @@ class GtmMartech {
     if (this.config.consent) {
       window.gtag('consent', 'default', DEFAULT_CONSENT);
     }
-
     window.gtag('js', new Date());
     this.config.tags.forEach((tag) => {
       window.gtag('config', tag, this.config.pageMetadata);
@@ -245,7 +250,6 @@ class GtmMartech {
   /**
    * Operations to perform during the eager phase
    */
-  // eslint-disable-next-line class-methods-use-this
   async eager() {
     // Load the GA4 tag(s) if analytics is enabled
     if (this.config.analytics) {
@@ -259,11 +263,14 @@ class GtmMartech {
   /**
    * Operations to perform during the lazy phase
    */
-  // eslint-disable-next-line class-methods-use-this
   async lazy() {
     // Update consent, if specified
     if (this.config.consent) {
-      this.config.consentCallback().then(this.updateUserConsent.bind(this));
+      this.config.consentCallback().then((consentConfig) => {
+        if (consentConfig !== undefined) {
+          this.updateUserConsent(consentConfig);
+        }
+      });
     }
     this.pushToDataLayer({ event: 'gtm.js', 'gtm.start': Date.now() });
     // Load the lazy GTM containers
@@ -276,7 +283,6 @@ class GtmMartech {
   /**
    * Operations to perform during the delayed phase
    */
-  // eslint-disable-next-line class-methods-use-this
   async delayed() {
     // Load the delayed GTM containers
     loadGtm.bind(this)('delayed');
