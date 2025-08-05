@@ -23,11 +23,11 @@ he AEM Marketing Technology plugin helps you quickly set up a MarTech stack base
     - [8. Decorate Section & Blocks](#8-decorate-section--blocks)
   - [API Reference](#api-reference)
     - [`new GtmMartech(martechConfig)`](#new-gtmmartechmartechconfig)
-    - [`GtmMartech.eager()`](#gtmmartech-eager)
-    - [`GtmMartech.lazy()`](#gtmmartech-lazy)
-    - [`GtmMartech.delayed()`](#gtmmartech-delayed)
-    - [`GtmMartech.pushToDataLayer(payload)`](#gtmmartech-pushtodatalayerpayload)
-    - [`GtmMartech.updateUserConsent(consent)`](#gtmmartech-updateuserconsentconsent)
+    - [`gtmMartech.eager()`](#gtmmartech-eager)
+    - [`gtmMartech.lazy()`](#gtmmartech-lazy)
+    - [`gtmMartech.delayed()`](#gtmmartech-delayed)
+    - [`gtmMartech.pushToDataLayer(payload)`](#gtmmartech-pushtodatalayerpayload)
+    - [`gtmMartech.updateUserConsent(consent)`](#gtmmartech-updateuserconsentconsent)
     - [`window.gtag()`](#window-gtag)
   - [An Example Site](#an-example-site)
   - [FAQ](#faq)
@@ -141,7 +141,7 @@ export default martech
 
 Import the plugin at the top of your `scripts.js` file:
 ```js
-import GtmMartech from './gtm-martech.js';
+import gtmMartech from './gtm-martech.js';
 ```
 
 ### 4. Call Eager Phase Function
@@ -155,7 +155,7 @@ async function loadEager(doc) {
     decorateMain(main);
     doc.body.classList.add('appear');
     await Promise.all([
-      GtmMartech.eager(),
+      gtmMartech.eager(),
       loadSection(main.querySelector('.section'), waitForFirstImage),
     ]);
   }
@@ -174,7 +174,7 @@ Update the `loadLazy` function, to call plugin's lazy phase.
 async function loadLazy(doc) {
   …
     await loadSections(main);
-    await GtmMartech.lazy();
+    await gtmMartech.lazy();
   …
 }
 ```
@@ -187,7 +187,7 @@ Update the `loadDelayed` function to call the plugin's delayed phase, after a ti
 ```js
 function loadDelayed() {
   …
-  window.setTimeout(GtmMartech.delayed, 1000);
+  window.setTimeout(gtmMartech.delayed, 1000);
   window.setTimeout(() => import('./delayed.js'), 3000);
   …
 }
@@ -254,29 +254,29 @@ Initializes the plugin. This should be called in the `scripts.js` outside any li
 
 ---
 
-### `GtmMartech.eager()`
+### `gtmMartech.eager()`
 Performs the eager phase operations for the plugin.
 
 ---
 
-### `GtmMartech.lazy()`
+### `gtmMartech.lazy()`
 Performs the lazy phase operations for the plugin.
 
 ---
 
-### `GtmMartech.delayed()`
+### `gtmMartech.delayed()`
 Performs the delayed phase operations for the plugin.
 
 ---
 
-### `GtmMartech.pushToDataLayer(payload)`
+### `gtmMartech.pushToDataLayer(payload)`
 Pushes a generic payload to the Adobe Client Data Layer.
 
 - **`payload`** `{Object}`: The data object to push.
 
 ---
 
-### `GtmMartech.updateUserConsent(consent)`
+### `gtmMartech.updateUserConsent(consent)`
 Updates the consent according to the []`gtag.js` implementation](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#implementation_example)
 
 - **`consent`** `{Object}`: An object detailing user consent choices.
