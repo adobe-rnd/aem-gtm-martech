@@ -126,7 +126,7 @@ const martech = new GtmMartech({
   tags: [/* One or more GA4 Measumrent Ids */],
   containers: {
     lazy: [/* Zero or more GTM Container Ids to load during Lazy Phase */],
-    lazy: [/* Zero or more GTM Container Ids to load during Delayed Phase */],
+    delayed: [/* Zero or more GTM Container Ids to load during Delayed Phase */],
   },
   pageMetadata: { /* Metadata to pass on during the intializaton of the GA4 tag */ },
   consent: !disabled,
