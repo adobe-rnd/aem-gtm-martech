@@ -2,7 +2,7 @@
 
 # AEM Edge Delivery Services Marketing Technology - GA/GTM
 
-he AEM Marketing Technology plugin helps you quickly set up a MarTech stack based on Google Analytics (GA) & Google Tag Manager (GTM) for your AEM project. It is currently available to customers in collaboration with AEM Engineering via co-innovation VIP Projects. To implement your use cases, please reach out to the AEM Engineering team in the Slack channel dedicated to your project.
+The AEM Marketing Technology plugin helps you quickly set up a MarTech stack based on Google Analytics (GA) & Google Tag Manager (GTM) for your AEM project. It is currently available to customers in collaboration with AEM Engineering via co-innovation VIP Projects. To implement your use cases, please reach out to the AEM Engineering team in the Slack channel dedicated to your project.
 
 ## Table of Contents 
 
@@ -31,7 +31,8 @@ he AEM Marketing Technology plugin helps you quickly set up a MarTech stack base
     - [`window.gtag()`](#window-gtag)
   - [An Example Site](#an-example-site)
   - [FAQ](#faq)
-    - [I need the page view data immediately, when is it captured?](#i-need-the-page-view-data-immediately-when-is-it-captured)
+    - [We need the page view data immediately, when is it captured?](#we-need-the-page-view-data-immediately-when-is-it-captured)
+    - [We also use the AEM Martech Plugin, won't there be dataLayer conflicts?](#we-also-use-the-aem-martech-plugin-wont-there-be-datalayer-conflicts)
     
 
 ## How It Works 
@@ -187,7 +188,7 @@ Update the `loadDelayed` function to call the plugin's delayed phase, after a ti
 ```js
 function loadDelayed() {
   …
-  window.setTimeout(gtmMartech.delayed, 1000);
+  window.setTimeout(() => gtmMartech.delayed(), 1000);
   window.setTimeout(() => import('./delayed.js'), 3000);
   …
 }
@@ -294,6 +295,10 @@ An example of this plugin in use can be found on the [AEM GTM Martech demo site]
 
 ## FAQ
 
-### I need the page view data immediately, when is it captured?
+### We need the page view data immediately, when is it captured?
 
 All GA4 scripts are imported to the page during the Eager Phase. During this process a `page_view` event occurs, which includes any custom metadata provided to during plugin initialization. This `page_view` event will be dispatched as soon as the Google library decides it should be sent, regardless of when any other phase's GTM libraries are loaded.
+
+### We also use the [AEM Martech Plugin](https://github.com/adobe-rnd/aem-martech), won't there be `dataLayer` conflicts?
+
+No. Both of these plugins use a different default data layer on the global `window` context. Unless you specifically provide the same name to each plugin's `dataLayerInstanceName` configuration parameter, they will be separate.
