@@ -48,6 +48,7 @@ describe('GtmMartech constructor', () => {
       expect(gtmMartech.config.tags).to.deep.equal([]);
       expect(gtmMartech.config.containers).to.deep.equal({ lazy: [], delayed: [] });
       expect(gtmMartech.config.pageMetadata).to.deep.equal({});
+      expect(gtmMartech.config.gtagConfig).to.deep.equal({});
       expect(gtmMartech.config.consent).to.be.true;
 
       // Verify gtag function is available
@@ -137,6 +138,45 @@ describe('GtmMartech constructor', () => {
         lazy: ['GTM-XXXXXXX'],
         delayed: ['GTM-YYYYYYY'],
       });
+    });
+
+    it('should use gtagConfig for gtag("config", …) third argument', async () => {
+      const meta = { page_title: 'From gtagConfig', transport_url: 'https://metrics.example.com' };
+      const gtm = createGtmMartech({ gtagConfig: meta });
+      expect(gtm.config.gtagConfig).to.deep.equal(meta);
+      expect(gtm.config.pageMetadata).to.deep.equal({});
+      const configEntry = window.gtmDataLayer.find((e) => e[0] === 'config');
+      expect(configEntry[2]).to.deep.equal(meta);
+    });
+
+    it('should treat pageMetadata as alias for gtagConfig', async () => {
+      const meta = { page_title: 'From pageMetadata' };
+      const gtm = createGtmMartech({ pageMetadata: meta });
+      expect(gtm.config.gtagConfig).to.deep.equal(meta);
+      expect(gtm.config.pageMetadata).to.deep.equal(meta);
+    });
+
+    it('should prefer gtagConfig when both are set and warn', async () => {
+      const consoleWarnSpy = sinon.spy(console, 'warn');
+      const gtag = { page_title: 'gtag wins' };
+      const page = { page_title: 'page loses' };
+      const gtm = createGtmMartech({ gtagConfig: gtag, pageMetadata: page });
+      expect(gtm.config.gtagConfig).to.deep.equal(gtag);
+      expect(gtm.config.pageMetadata).to.deep.equal(page);
+      sinon.assert.calledOnce(consoleWarnSpy);
+      consoleWarnSpy.restore();
+    });
+
+    it('should coerce null gtagConfig to empty object', async () => {
+      const gtm = createGtmMartech({ gtagConfig: null });
+      expect(gtm.config.gtagConfig).to.deep.equal({});
+      expect(gtm.config.pageMetadata).to.deep.equal({});
+    });
+
+    it('should coerce null pageMetadata to empty object when used as alias', async () => {
+      const gtm = createGtmMartech({ pageMetadata: null });
+      expect(gtm.config.gtagConfig).to.deep.equal({});
+      expect(gtm.config.pageMetadata).to.equal(null);
     });
   });
 
