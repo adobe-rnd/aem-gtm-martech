@@ -32,7 +32,8 @@
  *                                                    will be loaded during the lazy phase.
  * @property {Array<String>} containers.lazy The GTM containers to load during the lazy phase (defaults to empty list)
  * @property {Array<String>} containers.delayed The GTM containers to load during the delayed phase (defaults to empty list)
- * @property {Object} pageMetadata The page metadata to push to the data layer during the eager phase
+ * @property {Object} gtagConfig Options passed to `gtag('config', measurementId, gtagConfig)` for each measurement ID.
+ * @property {Object} [pageMetadata] Deprecated alias for `gtagConfig`. If both are set, `gtagConfig` wins.
  * @property {Boolean} consent Whether consent is required, if true all tracking is defaulted to 'denied'
  * @property {consentCallback} consentCallback A function that will prompt the visitor for consent.
  *                                    If the CMP does not automatically update the Google Consent config object,
@@ -63,6 +64,7 @@ const DEFAULT_CONFIG = Object.freeze({
     delayed: [],
   },
   pageMetadata: {},
+  gtagConfig: {},
   consent: true,
   consentCallback: () => Promise.resolve(undefined),
   decorateCallback: undefined,
@@ -236,6 +238,21 @@ class GtmMartech {
     console.assert(martechConfig.tags?.length > 0, 'No GA4 tag provided.');
 
     this.config = { ...DEFAULT_CONFIG, ...martechConfig };
+
+    const gtagConfigProvided = Object.hasOwn(martechConfig, 'gtagConfig');
+    const pageMetadataProvided = Object.hasOwn(martechConfig, 'pageMetadata');
+    if (gtagConfigProvided && pageMetadataProvided) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'aem-gtm-martech: Both gtagConfig and pageMetadata are set; using gtagConfig. pageMetadata is deprecated; use gtagConfig only.',
+      );
+    }
+    if (gtagConfigProvided) {
+      this.config.gtagConfig = martechConfig.gtagConfig ?? {};
+    } else {
+      this.config.gtagConfig = this.config.pageMetadata ?? {};
+    }
+
     this.dataLayer = initDataLayer(this.config.dataLayerInstanceName);
     // Default consent, if specified
     if (this.config.consent) {
@@ -243,7 +260,7 @@ class GtmMartech {
     }
     window.gtag('js', new Date());
     this.config.tags.forEach((tag) => {
-      window.gtag('config', tag, this.config.pageMetadata);
+      window.gtag('config', tag, this.config.gtagConfig);
     });
   }
 

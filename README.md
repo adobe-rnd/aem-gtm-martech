@@ -36,6 +36,7 @@ The AEM Marketing Technology plugin helps you quickly set up a MarTech stack bas
     - [How does gtag relate to the data layer?](#how-does-gtag-relate-to-the-data-layer)
     - [Why `gtmMartech` in scripts.js but `new GtmMartech` in the helper?](#why-gtmmartech-in-scriptsjs-but-new-gtmmartech-in-the-helper)
     - [When is the initial page view captured?](#when-is-the-initial-page-view-captured)
+    - [How do I use server-side GTM (sGTM) with this plugin?](#how-do-i-use-server-side-gtm-sgtm-with-this-plugin)
     
 
 ## Not a standard GA/GTM install
@@ -151,7 +152,7 @@ const martech = new GtmMartech({
     lazy: [/* Zero or more GTM Container Ids to load during Lazy Phase */],
     delayed: [/* Zero or more GTM Container Ids to load during Delayed Phase */],
   },
-  pageMetadata: { /* Metadata to pass during initialization of the GA4 tag */ },
+  gtagConfig: { /* Passed to gtag('config', measurementId, …): page fields, transport_url, etc. */ },
   consent: !disabled,
   consentCallback: /* Function that handles consent processing, if consent is enabled, this must be specified */,
   decorateCallback: /* Function to call on each found or loaded Section/Block */,
@@ -274,7 +275,8 @@ Initializes the plugin. This should be called in the `scripts.js` outside any li
   - `containers` `{Object|String[]|String}`: Configuration for GTM Containers, or an Array of GTM Container Ids to load during the lazy phase, or a single GTM Container Id to load during the lazy phase.
     - `lazy` `{String[]}`: Array of GTM Container Ids to load in the lazy phase.
     - `delayed` `{String[]}`: Array of GTM Container Ids to load in the delayed phase.
-  - `pageMetadata` `{Object}`: A set of key-value pairs to pass to the GA4 tag initializer.
+  - `gtagConfig` `{Object}`: Passed as the third argument to `gtag('config', measurementId, gtagConfig)` for each ID in `tags` (any fields [Google documents for GA4 `gtag('config')`](https://developers.google.com/analytics/devguides/collection/ga4/reference/config), e.g. `page_title`, `transport_url`). Default: `{}`.
+  - `pageMetadata` `{Object}`: **Deprecated.** Alias for `gtagConfig` **input only**. If both are set, `gtagConfig` wins (with a console warning). The resolved object used for `gtag('config', …)` is only **`gtagConfig`** on the instance; do not read `instance.config.pageMetadata` as the effective config.
   - `consent` `{Boolean}`: Enable consent. Default: `true`
   - `consentCallback` `{Function|undefined}`: A function that will perform consent validation. Returns a promise that resolves to an object, which will be passed to the GA for update.
   - `decorateCallback` `{Function}`: A function that can decorate HTML elements for events. Passed all sections & blocks found.
@@ -323,7 +325,7 @@ An example of this plugin in use can be found on the [AEM GTM Martech demo site]
 
 ### What runs at helper import versus in `eager()`?
 
-Running `new GtmMartech(...)` when the helper module loads sets up the named data layer, defines `window.gtag`, applies consent defaults when `consent` is enabled, and queues `gtag('config', …)` for each measurement ID. `eager()` loads the GA4 `gtag/js` script from Google so those queued calls can execute. Activity in the console before `eager()` resolves is normal.
+Running `new GtmMartech(...)` when the helper module loads sets up the named data layer, defines `window.gtag`, applies consent defaults when `consent` is enabled, and queues `gtag('config', measurementId, gtagConfig)` for each measurement ID (from your `gtagConfig` option). `eager()` loads the GA4 `gtag/js` script from Google so those queued calls can execute. Activity in the console before `eager()` resolves is normal.
 
 ### How does gtag relate to the data layer?
 
@@ -335,4 +337,12 @@ The **plugin** (`plugins/gtm-martech/src/index.js`) default-exports the **`GtmMa
 
 ### When is the initial page view captured?
 
-All GA4 scripts are imported to the page during the Eager Phase. During this process a `page_view` event occurs, which includes any custom metadata provided during plugin initialization. This `page_view` event will be dispatched as soon as the Google library decides it should be sent, regardless of when any other phase's GTM libraries are loaded.
+All GA4 scripts are imported to the page during the Eager Phase. During this process a `page_view` event occurs, which includes fields from your `gtagConfig` (or deprecated `pageMetadata`) passed at construction. This `page_view` event will be dispatched as soon as the Google library decides it should be sent, regardless of when any other phase's GTM libraries are loaded.
+
+### How do I use server-side GTM (sGTM) with this plugin?
+
+Server-side GTM is a **tagging server** (usually on Google Cloud) that receives requests from the browser and forwards to GA4 and other vendors. This plugin does not host that server; you deploy and configure it using [Google’s server-side tagging documentation](https://developers.google.com/tag-platform/tag-manager/server-side).
+
+For **GA4 loaded through this plugin** (`tags` + `eager()`), set your tagging server origin on the client by including **`transport_url`** in **`gtagConfig`** (HTTPS URL Google documents for your setup, typically your first-party tagging endpoint). That object is passed straight into `gtag('config', measurementId, gtagConfig)`, so the GA4 library can send hits via your server.
+
+You still load **web** GTM containers in **`lazy` / `delayed`** as today. GA4 **tags inside those containers** must be configured separately to use the same server endpoint where required; otherwise the browser may still send some hits directly. Avoid configuring **two independent client paths** for the same event and same GA4 property (double counting is a workspace/configuration issue, not introduced by the plugin’s phases).
